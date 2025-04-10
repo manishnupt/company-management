@@ -15,6 +15,7 @@ public class RoleGroup {
     private Long id;
 
     private String name;
+    private String description;
 
     @ManyToMany
     @JoinTable(

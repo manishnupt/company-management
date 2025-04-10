@@ -24,8 +24,8 @@ public class AdminController {
     }
 
     @PostMapping("/createGroup")
-    public String createGroup(@RequestParam String groupName){
-        return adminService.createGroup(groupName);
+    public String createGroup(@RequestParam String groupName,@RequestParam String groupDescription){
+        return adminService.createGroup(groupName,groupDescription);
     }
 
 

@@ -9,5 +9,6 @@ import java.util.Set;
 public class GroupResponse {
     private long groupId;
     private String groupName;
+    private String groupDescription;
     private Set<Role> roles;
 }

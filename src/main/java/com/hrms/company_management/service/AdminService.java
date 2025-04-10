@@ -30,13 +30,14 @@ public class AdminService {
         return hm;
     }
 
-    public String createGroup(String groupName) {
+    public String createGroup(String groupName,String groupDescription) {
 
         if (roleGroupRepo.findByName(groupName).isPresent()) {
             throw new RuntimeException("Group already exists");
         }
         RoleGroup roleGroup = new RoleGroup();
         roleGroup.setName(groupName);
+        roleGroup.setDescription(groupDescription);
         RoleGroup savedGroup = roleGroupRepo.save(roleGroup);
         if (savedGroup.getId()!=null){
             return "Group saved success";
@@ -52,6 +53,7 @@ public class AdminService {
             response.setGroupId(roleGroup.getId());
             response.setGroupName(roleGroup.getName());
             response.setRoles(roleGroup.getRoles());
+            response.setGroupDescription(roleGroup.getDescription());
             groupResponses.add(response);
         }
         return groupResponses;
