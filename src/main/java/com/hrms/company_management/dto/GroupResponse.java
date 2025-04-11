@@ -10,5 +10,5 @@ public class GroupResponse {
     private long groupId;
     private String groupName;
     private String groupDescription;
-    private Set<Role> roles;
+   // private Set<Role> roles;
 }

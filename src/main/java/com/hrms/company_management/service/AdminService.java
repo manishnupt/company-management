@@ -52,7 +52,7 @@ public class AdminService {
             GroupResponse response = new GroupResponse();
             response.setGroupId(roleGroup.getId());
             response.setGroupName(roleGroup.getName());
-            response.setRoles(roleGroup.getRoles());
+           // response.setRoles(roleGroup.getRoles());
             response.setGroupDescription(roleGroup.getDescription());
             groupResponses.add(response);
         }
@@ -69,5 +69,15 @@ public class AdminService {
 
         group.getRoles().addAll(roles);
         return roleGroupRepo.save(group);
+    }
+
+    public Map<String, String> getAllRolesByGroup(Long groupId) {
+        RoleGroup groupById = roleGroupRepo.findById(groupId).get();
+        Set<Role> roles = groupById.getRoles();
+        Map<String, String> hm = new HashMap<>();
+        for(Role role : roles){
+            hm.put(role.getName(),role.getDescription());
+        }
+        return hm;
     }
 }

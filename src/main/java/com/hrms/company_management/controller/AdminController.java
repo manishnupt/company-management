@@ -33,6 +33,10 @@ public class AdminController {
     public List<GroupResponse> getAllGroups(){
         return  adminService.getAllGroups();
     }
+    @GetMapping("/group/{groupId}/roles")
+    public Map<String,String> getAllRolesByGroups(@PathVariable Long groupId){
+        return  adminService.getAllRolesByGroup(groupId);
+    }
 
     @PostMapping("/{groupId}/roles")
     public ResponseEntity<RoleGroup> assignRolesToGroup(
