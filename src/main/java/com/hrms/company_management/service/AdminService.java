@@ -23,14 +23,14 @@ public class AdminService {
 
     public Map<String, String> getRoles() {
         List<Role> allRoles = roleRepo.findAll();
-        Map<String,String> hm = new HashMap<>();
-        for(Role role:allRoles){
+        Map<String, String> hm = new HashMap<>();
+        for (Role role : allRoles) {
             hm.put(role.getName(), role.getDescription());
         }
         return hm;
     }
 
-    public String createGroup(String groupName,String groupDescription) {
+    public String createGroup(String groupName, String groupDescription) {
 
         if (roleGroupRepo.findByName(groupName).isPresent()) {
             throw new RuntimeException("Group already exists");
@@ -39,7 +39,7 @@ public class AdminService {
         roleGroup.setName(groupName);
         roleGroup.setDescription(groupDescription);
         RoleGroup savedGroup = roleGroupRepo.save(roleGroup);
-        if (savedGroup.getId()!=null){
+        if (savedGroup.getId() != null) {
             return "Group saved success";
         }
         return "Facing issues in creating group";
@@ -47,17 +47,18 @@ public class AdminService {
 
     public List<GroupResponse> getAllGroups() {
         List<RoleGroup> allGroupRoles = roleGroupRepo.findAll();
-        List<GroupResponse> groupResponses= new ArrayList<>();
-        for(RoleGroup roleGroup:allGroupRoles){
+        List<GroupResponse> groupResponses = new ArrayList<>();
+        for (RoleGroup roleGroup : allGroupRoles) {
             GroupResponse response = new GroupResponse();
             response.setGroupId(roleGroup.getId());
             response.setGroupName(roleGroup.getName());
-           // response.setRoles(roleGroup.getRoles());
+            // response.setRoles(roleGroup.getRoles());
             response.setGroupDescription(roleGroup.getDescription());
             groupResponses.add(response);
         }
         return groupResponses;
     }
+
     public RoleGroup assignRoles(Long groupId, List<String> roleNames) {
         RoleGroup group = roleGroupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found"));
@@ -75,9 +76,20 @@ public class AdminService {
         RoleGroup groupById = roleGroupRepo.findById(groupId).get();
         Set<Role> roles = groupById.getRoles();
         Map<String, String> hm = new HashMap<>();
-        for(Role role : roles){
-            hm.put(role.getName(),role.getDescription());
+        for (Role role : roles) {
+            hm.put(role.getName(), role.getDescription());
         }
         return hm;
+    }
+
+    public RoleGroup getGroupById(Long groupId) {
+        RoleGroup group = roleGroupRepo.findById(groupId).get();
+        GroupResponse response = new GroupResponse();
+        response.setGroupId(group.getId());
+        response.setGroupName(group.getName());
+        // response.setRoles(roleGroup.getRoles());
+        response.setGroupDescription(group.getDescription());
+        return group;
+
     }
 }

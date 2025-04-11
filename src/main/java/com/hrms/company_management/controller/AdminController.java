@@ -18,24 +18,29 @@ public class AdminController {
     @Autowired
     AdminService adminService;
 
-    @GetMapping("/roles")
+    @GetMapping("/role")
     public Map<String,String> getRoles(){
         return adminService.getRoles();
     }
 
-    @PostMapping("/createGroup")
+    @PostMapping("/group")
     public String createGroup(@RequestParam String groupName,@RequestParam String groupDescription){
         return adminService.createGroup(groupName,groupDescription);
     }
 
 
-    @GetMapping("/groups")
+    @GetMapping("/group")
     public List<GroupResponse> getAllGroups(){
         return  adminService.getAllGroups();
     }
     @GetMapping("/group/{groupId}/roles")
     public Map<String,String> getAllRolesByGroups(@PathVariable Long groupId){
         return  adminService.getAllRolesByGroup(groupId);
+    }
+
+    @GetMapping("/group/{groupId}")
+    public RoleGroup getGroupById(@PathVariable Long groupId){
+        return  adminService.getGroupById(groupId);
     }
 
     @PostMapping("/{groupId}/roles")
