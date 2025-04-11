@@ -13,6 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/admin")
+@CrossOrigin(origins="*")
 public class AdminController {
 
     @Autowired
@@ -43,7 +44,7 @@ public class AdminController {
         return  adminService.getGroupById(groupId);
     }
 
-    @PostMapping("/{groupId}/roles")
+    @PostMapping("group/{groupId}/roles")
     public ResponseEntity<RoleGroup> assignRolesToGroup(
             @PathVariable Long groupId,
             @RequestBody AssignRolesRequest request) {
