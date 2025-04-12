@@ -55,7 +55,7 @@ public class AdminController {
         return ResponseEntity.ok(updatedGroup);
     }
 
-    @PostMapping
+    @PostMapping("/modules")
     public ResponseEntity<Set<String>> getModulesForRoles(@RequestBody RolesRequest rolesRequest) {
 
         Set<String> modules= adminService.getModulesForRoles(rolesRequest);
