@@ -16,5 +16,7 @@ public class Role {
 
     private String name;
 
+    private String module;
+
     private String description;
 }

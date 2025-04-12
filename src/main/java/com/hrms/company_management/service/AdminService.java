@@ -1,6 +1,7 @@
 package com.hrms.company_management.service;
 
 import com.hrms.company_management.dto.GroupResponse;
+import com.hrms.company_management.dto.RolesRequest;
 import com.hrms.company_management.entity.Role;
 import com.hrms.company_management.entity.RoleGroup;
 import com.hrms.company_management.repository.RoleGroupRepo;
@@ -91,5 +92,16 @@ public class AdminService {
         response.setGroupDescription(group.getDescription());
         return group;
 
+    }
+
+    public Set<String> getModulesForRoles(RolesRequest rolesRequest) {
+        Set<String> roles =rolesRequest.getRoles();
+        List<Role> allRoles = roleRepo.findAll();
+        Set<String> modules = new HashSet<>();
+        for(Role role:allRoles){
+           if(roles.contains(role.getName()))
+               modules.add(role.getModule());
+        }
+        return  modules;
     }
 }

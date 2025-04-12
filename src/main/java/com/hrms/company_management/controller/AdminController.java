@@ -2,6 +2,7 @@ package com.hrms.company_management.controller;
 
 import com.hrms.company_management.dto.AssignRolesRequest;
 import com.hrms.company_management.dto.GroupResponse;
+import com.hrms.company_management.dto.RolesRequest;
 import com.hrms.company_management.entity.RoleGroup;
 import com.hrms.company_management.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/admin")
@@ -51,5 +53,13 @@ public class AdminController {
 
         RoleGroup updatedGroup = adminService.assignRoles(groupId, request.getRoleNames());
         return ResponseEntity.ok(updatedGroup);
+    }
+
+    @PostMapping
+    public ResponseEntity<Set<String>> getModulesForRoles(@RequestBody RolesRequest rolesRequest) {
+
+        Set<String> modules= adminService.getModulesForRoles(rolesRequest);
+
+        return ResponseEntity.ok(modules);
     }
 }
