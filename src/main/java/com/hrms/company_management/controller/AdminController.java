@@ -2,6 +2,7 @@ package com.hrms.company_management.controller;
 
 import com.hrms.company_management.dto.AssignRolesRequest;
 import com.hrms.company_management.dto.GroupResponse;
+import com.hrms.company_management.dto.ModulesRequest;
 import com.hrms.company_management.dto.RolesRequest;
 import com.hrms.company_management.entity.RoleGroup;
 import com.hrms.company_management.service.AdminService;
@@ -61,5 +62,10 @@ public class AdminController {
         Set<String> modules= adminService.getModulesForRoles(rolesRequest);
 
         return ResponseEntity.ok(modules);
+    }
+    @PostMapping("/modules/roles")
+    public ResponseEntity<Set<String>> getRolesByModules(@RequestBody ModulesRequest request) {
+        Set<String> roles = adminService.getRolesByModules(request.getModuleNames());
+        return ResponseEntity.ok(roles);
     }
 }

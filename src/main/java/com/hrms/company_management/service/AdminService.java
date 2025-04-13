@@ -104,4 +104,13 @@ public class AdminService {
         }
         return  modules;
     }
+
+    public Set<String> getRolesByModules(List<String> moduleNames) {
+        List<Role> allRoles = roleRepo.findByModuleIn(moduleNames);
+        Set<String> roles = new HashSet<>();
+        for(Role role:allRoles){
+            roles.add(role.getName());
+        }
+        return roles;
+    }
 }
