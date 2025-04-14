@@ -14,6 +14,12 @@
 	<name>company-management</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
+	<repositories>
+		<repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/yourusername/hrms-commons</url>
+		</repository>
+	</repositories>
 	<licenses>
 		<license/>
 	</licenses>
@@ -32,6 +38,12 @@
 		<maven.compiler.target>17</maven.compiler.target>
 	</properties>
 	<dependencies>
+
+		<dependency>
+			<groupId>com.hrms</groupId>
+			<artifactId>hrms-common</artifactId>
+			<version>0.0.1</version>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
