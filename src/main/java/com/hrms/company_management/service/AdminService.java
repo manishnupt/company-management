@@ -1,18 +1,32 @@
 package com.hrms.company_management.service;
 
+import com.hrms.company_management.dto.GenerateTokenRequest;
 import com.hrms.company_management.dto.GroupResponse;
 import com.hrms.company_management.dto.RolesRequest;
 import com.hrms.company_management.entity.Role;
 import com.hrms.company_management.entity.RoleGroup;
 import com.hrms.company_management.repository.RoleGroupRepo;
 import com.hrms.company_management.repository.RoleRepo;
+import com.hrms.company_management.utility.CompanyManagementHelper;
+import com.hrms.company_management.utility.Constants;
+import com.hrms.company_management.utility.TenantContext;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Log4j2
 public class AdminService {
 
     @Autowired
@@ -20,6 +34,17 @@ public class AdminService {
 
     @Autowired
     RoleGroupRepo roleGroupRepo;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Value("${tenant_service_base_url}")
+    private String tenantUrl;
+
+    @Value("${t iam_service_base_url}")
+    private String iamServiceBaseUrl;
+
+
 
 
     public Map<String, String> getRoles() {
@@ -40,10 +65,46 @@ public class AdminService {
         roleGroup.setName(groupName);
         roleGroup.setDescription(groupDescription);
         RoleGroup savedGroup = roleGroupRepo.save(roleGroup);
+        handleKeycloakGroupCreation(groupName, TenantContext.getCurrentTenant());
         if (savedGroup.getId() != null) {
             return "Group saved success";
         }
         return "Facing issues in creating group";
+    }
+
+    private void handleKeycloakGroupCreation(String groupName,String tenant) {
+        Map<String,Object> masterRealmDetails =getMasterRealmDetails();
+        String token=getKeycloakToken(masterRealmDetails);
+        String groupInKeycloak = createGroupInKeycloak(tenant, groupName, token);
+        System.out.println(groupInKeycloak);
+    }
+
+    private String createGroupInKeycloak(String realm, String group, String token) {
+            HttpHeaders headers = createHeaders(token);
+            String createGroupUrl = iamServiceBaseUrl + Constants.CREATE_GROUP + "?groupName=" + URLEncoder.encode(group, StandardCharsets.UTF_8) + "&realmName=" + URLEncoder.encode(realm, StandardCharsets.UTF_8);
+            HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+            ResponseEntity<String> exchange = restTemplate.exchange(createGroupUrl, HttpMethod.POST, requestEntity, String.class);
+            return String.valueOf(exchange.getBody());
+    }
+
+    public String getKeycloakToken(Map<String,Object> masterRealmDetails) {
+        String adminAccessTokenUrl = iamServiceBaseUrl + Constants.GET_ADMIN_TOKEN;
+        GenerateTokenRequest tokenRequest = CompanyManagementHelper.getGenerateTokenRequest(masterRealmDetails);
+        HttpEntity<GenerateTokenRequest> entity = new HttpEntity<>(tokenRequest, createHeaders(null));
+
+        ResponseEntity<Map<String, String>> response = makeApiCall(adminAccessTokenUrl, HttpMethod.POST, entity,
+                new ParameterizedTypeReference<>() {}, 500, "Failed to obtain admin access token");
+        log.info("fetched the admin token succesfully");
+
+        return response.getBody().get("token");
+        }
+
+
+    private Map<String, Object> getMasterRealmDetails() {
+        String url = tenantUrl +"/auth-config/" + "master";
+        ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+        Map<String, Object> responseBody = response.getBody();
+        return (Map<String, Object>) responseBody.get("data");
     }
 
     public List<GroupResponse> getAllGroups() {
@@ -99,8 +160,8 @@ public class AdminService {
         List<Role> allRoles = roleRepo.findAll();
         Set<String> modules = new HashSet<>();
         for(Role role:allRoles){
-           if(roles.contains(role.getName()))
-               modules.add(role.getModule());
+            if(roles.contains(role.getName()))
+                modules.add(role.getModule());
         }
         return  modules;
     }
@@ -112,5 +173,21 @@ public class AdminService {
             roles.add(role.getName());
         }
         return roles;
+    }
+
+    private HttpHeaders createHeaders(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
+
+    private <T> ResponseEntity<T> makeApiCall(String url, HttpMethod method, HttpEntity<?> entity, ParameterizedTypeReference<T> responseType, int errorCode, String errorMessage) {
+        try {
+            return restTemplate.exchange(url, method, entity, responseType);
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("{} - Status: {}, Response: {}", errorMessage, e.getStatusCode(), e.getResponseBodyAsString(), e);
+            throw new RuntimeException(errorMessage + " - Status: " + e.getStatusCode(), e);
+        }
     }
 }
