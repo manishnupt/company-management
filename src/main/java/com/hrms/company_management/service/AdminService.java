@@ -38,10 +38,10 @@ public class AdminService {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Value("${tenant_service_base_url}")
+    @Value("${tenant_management_base_url}")
     private String tenantUrl;
 
-    @Value("${t iam_service_base_url}")
+    @Value("${iam_service_base_url}")
     private String iamServiceBaseUrl;
 
 
