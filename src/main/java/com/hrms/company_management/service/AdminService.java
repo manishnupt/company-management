@@ -75,6 +75,7 @@ public class AdminService {
     private void handleKeycloakGroupCreation(String groupName,String tenant) {
         Map<String,Object> masterRealmDetails =getMasterRealmDetails();
         String token=getKeycloakToken(masterRealmDetails);
+        log.info("token:{}",token);
         String groupInKeycloak = createGroupInKeycloak(tenant, groupName, token);
         System.out.println(groupInKeycloak);
     }
