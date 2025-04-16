@@ -103,7 +103,7 @@ public class AdminService {
 
 
     private Map<String, Object> getMasterRealmDetails() {
-        String url = tenantUrl +"api/v1/tenants/auth-config/" + "master";
+        String url = tenantUrl +"/api/v1/tenants/auth-config/" + "master";
         ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
         Map<String, Object> responseBody = response.getBody();
         return (Map<String, Object>) responseBody.get("data");
