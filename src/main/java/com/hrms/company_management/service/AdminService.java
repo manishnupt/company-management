@@ -90,7 +90,7 @@ public class AdminService {
     }
 
     public String getKeycloakToken(Map<String,Object> masterRealmDetails) {
-        String adminAccessTokenUrl = iamServiceBaseUrl +"/iamcontroller/"+ Constants.GET_ADMIN_TOKEN;
+        String adminAccessTokenUrl = iamServiceBaseUrl + Constants.GET_ADMIN_TOKEN;
         GenerateTokenRequest tokenRequest = CompanyManagementHelper.getGenerateTokenRequest(masterRealmDetails);
         HttpEntity<GenerateTokenRequest> entity = new HttpEntity<>(tokenRequest, createHeaders(null));
 
