@@ -81,7 +81,7 @@ public class AdminService {
 
     private String createGroupInKeycloak(String realm, String group, String token) {
             HttpHeaders headers = createHeaders(token);
-            String createGroupUrl = iamServiceBaseUrl + Constants.CREATE_GROUP + "?groupName=" + URLEncoder.encode(group, StandardCharsets.UTF_8) + "&realmName=" + URLEncoder.encode(realm, StandardCharsets.UTF_8);
+            String createGroupUrl = iamServiceBaseUrl+"/iamcontroller" + Constants.CREATE_GROUP + "?groupName=" + URLEncoder.encode(group, StandardCharsets.UTF_8) + "&realmName=" + URLEncoder.encode(realm, StandardCharsets.UTF_8);
             log.info("createGroupUrl:{}",createGroupUrl);
             HttpEntity<String> requestEntity = new HttpEntity<>(headers);
             ResponseEntity<String> exchange = restTemplate.exchange(createGroupUrl, HttpMethod.POST, requestEntity, String.class);
@@ -89,7 +89,7 @@ public class AdminService {
     }
 
     public String getKeycloakToken(Map<String,Object> masterRealmDetails) {
-        String adminAccessTokenUrl = iamServiceBaseUrl + Constants.GET_ADMIN_TOKEN;
+        String adminAccessTokenUrl = iamServiceBaseUrl +"/iamcontroller/"+ Constants.GET_ADMIN_TOKEN;
         GenerateTokenRequest tokenRequest = CompanyManagementHelper.getGenerateTokenRequest(masterRealmDetails);
         HttpEntity<GenerateTokenRequest> entity = new HttpEntity<>(tokenRequest, createHeaders(null));
 
