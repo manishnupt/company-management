@@ -82,6 +82,7 @@ public class AdminService {
     private String createGroupInKeycloak(String realm, String group, String token) {
             HttpHeaders headers = createHeaders(token);
             String createGroupUrl = iamServiceBaseUrl + Constants.CREATE_GROUP + "?groupName=" + URLEncoder.encode(group, StandardCharsets.UTF_8) + "&realmName=" + URLEncoder.encode(realm, StandardCharsets.UTF_8);
+            log.info("createGroupUrl:{}",createGroupUrl);
             HttpEntity<String> requestEntity = new HttpEntity<>(headers);
             ResponseEntity<String> exchange = restTemplate.exchange(createGroupUrl, HttpMethod.POST, requestEntity, String.class);
             return String.valueOf(exchange.getBody());
