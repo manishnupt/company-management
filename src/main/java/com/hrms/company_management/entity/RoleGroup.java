@@ -16,6 +16,7 @@ public class RoleGroup {
 
     private String name;
     private String description;
+    private String kcGroupIdRef;//this represents the keycloak group id
 
     @ManyToMany
     @JoinTable(

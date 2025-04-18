@@ -64,20 +64,20 @@ public class AdminService {
         RoleGroup roleGroup = new RoleGroup();
         roleGroup.setName(groupName);
         roleGroup.setDescription(groupDescription);
+        String keycloakGroupId = handleKeycloakGroupCreation(groupName, TenantContext.getCurrentTenant());
+        roleGroup.setKcGroupIdRef(keycloakGroupId);
         RoleGroup savedGroup = roleGroupRepo.save(roleGroup);
-        handleKeycloakGroupCreation(groupName, TenantContext.getCurrentTenant());
         if (savedGroup.getId() != null) {
             return "Group saved success";
         }
         return "Facing issues in creating group";
     }
 
-    private void handleKeycloakGroupCreation(String groupName,String tenant) {
+    private String handleKeycloakGroupCreation(String groupName,String tenant) {
         Map<String,Object> masterRealmDetails =getMasterRealmDetails();
         String token=getKeycloakToken(masterRealmDetails);
         log.info("token:{}",token);
-        String groupInKeycloak = createGroupInKeycloak(tenant, groupName, token);
-        System.out.println(groupInKeycloak);
+        return createGroupInKeycloak(tenant, groupName, token);
     }
 
     private String createGroupInKeycloak(String realm, String group, String token) {
@@ -132,8 +132,52 @@ public class AdminService {
                         .orElseThrow(() -> new RuntimeException("Role not found: " + roleName)))
                 .collect(Collectors.toSet());
 
+        handleKeycloakGroupRoleAssignment(group.getKcGroupIdRef(),roleNames,TenantContext.getCurrentTenant());
+
         group.getRoles().addAll(roles);
         return roleGroupRepo.save(group);
+    }
+
+    private void handleKeycloakGroupRoleAssignment(String id, List<String> roleNames, String currentTenant) {
+
+        Map<String,Object> masterRealmDetails =getMasterRealmDetails();
+        String token=getKeycloakToken(masterRealmDetails);
+        log.info("token:{}",token);
+        assignRoleToGroupKC(token,id,roleNames,currentTenant);
+    }
+
+    private void assignRoleToGroupKC(String token, String id, List<String> roleNames, String currentTenant) {
+        try {
+            // Create RestTemplate instance
+            RestTemplate restTemplate = new RestTemplate();
+
+            String url = iamServiceBaseUrl + "/assign-group-roles?groupId=" + id + "&realmName=" + currentTenant;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", token);
+
+            HttpEntity<List<String>> requestEntity = new HttpEntity<>(roleNames, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    requestEntity,
+                    String.class
+            );
+
+            // Handle the response
+            if (response.getStatusCode() == HttpStatus.OK) {
+                System.out.println("Roles assigned successfully: " + response.getBody());
+            } else {
+                System.out.println("Failed to assign roles. Status code: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            System.err.println("Error calling assign-group-roles API: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+
     }
 
     public Map<String, String> getAllRolesByGroup(Long groupId) {
