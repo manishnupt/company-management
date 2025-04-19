@@ -2,9 +2,17 @@ package com.hrms.company_management.service;
 
 import com.hrms.company_management.dto.GenerateTokenRequest;
 import com.hrms.company_management.dto.GroupResponse;
+import com.hrms.company_management.dto.HolidayRequest;
+import com.hrms.company_management.dto.HolidayResponse;
+import com.hrms.company_management.dto.NoticeResponse;
+import com.hrms.company_management.dto.PublishNoticeRequest;
 import com.hrms.company_management.dto.RolesRequest;
+import com.hrms.company_management.entity.Holiday;
+import com.hrms.company_management.entity.Notice;
 import com.hrms.company_management.entity.Role;
 import com.hrms.company_management.entity.RoleGroup;
+import com.hrms.company_management.repository.HolidayRepo;
+import com.hrms.company_management.repository.NoticeRepo;
 import com.hrms.company_management.repository.RoleGroupRepo;
 import com.hrms.company_management.repository.RoleRepo;
 import com.hrms.company_management.utility.CompanyManagementHelper;
@@ -22,6 +30,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -37,6 +46,12 @@ public class AdminService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    NoticeRepo noticeRepository;
+
+    @Autowired
+    HolidayRepo holidayRepository;
 
     @Value("${tenant_management_base_url}")
     private String tenantUrl;
@@ -239,4 +254,77 @@ public class AdminService {
             throw new RuntimeException(errorMessage + " - Status: " + e.getStatusCode(), e);
         }
     }
+
+    // Notice Management
+    public String publishNotice(PublishNoticeRequest noticeRequest) {
+
+        Notice notice = new Notice();
+        notice.setTitle(noticeRequest.getTitle());
+        notice.setDescription(noticeRequest.getDescription());
+        notice.setNoticeType(noticeRequest.getNoticeType());
+        Notice savedNotice = noticeRepository.save(notice);
+        if (savedNotice.getId() != null) {
+            return "Notice published successfully";
+        } else {
+            return "Failed to publish notice";
+        }
+    }
+
+    public List<NoticeResponse> getAllNotices() {
+        List<Notice> notices = noticeRepository.findAll();
+
+        if (notices.isEmpty()) {
+            throw new RuntimeException("No notices found");
+        }
+        List<NoticeResponse> noticeResponses = notices.stream()
+                .map(notice -> {
+                    NoticeResponse response = new NoticeResponse();
+                    response.setId(notice.getId());
+                    response.setTitle(notice.getTitle());
+                    response.setDescription(notice.getDescription());
+                    response.setNoticeType(notice.getNoticeType());
+                    response.setCreatedAt(notice.getCreatedAt());
+                    response.setUpdatedAt(notice.getUpdatedAt());
+                    return response;
+                })
+                .collect(Collectors.toList());
+
+        return noticeResponses;
+
+    }
+
+    public String addHoliday(HolidayRequest holidayRequest) {
+        Holiday holiday = new Holiday();
+        holiday.setName(holidayRequest.getName());
+        holiday.setDate(LocalDate.parse(holidayRequest.getDate()));
+        holiday.setType(holidayRequest.getType());
+
+        Holiday savedHoliday = holidayRepository.save(holiday);
+        if (savedHoliday.getId() != null) {
+            return "Holiday added successfully";
+        } else {
+            return "Failed to add holiday";
+        }
+    }
+
+    public List<HolidayResponse> getAllHolidays() {
+        List<Holiday> holidays = holidayRepository.findAll();
+
+        if (holidays.isEmpty()) {
+            throw new RuntimeException("No holidays found");
+        }
+        List<HolidayResponse> holidayResponses = holidays.stream()
+                .map(holiday -> {
+                    HolidayResponse response = new HolidayResponse();
+                    response.setId(holiday.getId());
+                    response.setName(holiday.getName());
+                    response.setDate(holiday.getDate().toString());
+                    response.setType(holiday.getType());
+                    return response;
+                })
+                .collect(Collectors.toList());
+
+        return holidayResponses;
+    }
+
 }
