@@ -6,7 +6,7 @@ import com.hrms.company_management.dto.HolidayRequest;
 import com.hrms.company_management.dto.HolidayResponse;
 import com.hrms.company_management.dto.ModulesRequest;
 import com.hrms.company_management.dto.NoticeResponse;
-import com.hrms.company_management.dto.PublishNoticeRequest;
+import com.hrms.company_management.dto.NoticeRequest;
 import com.hrms.company_management.dto.RolesRequest;
 import com.hrms.company_management.entity.RoleGroup;
 import com.hrms.company_management.service.AdminService;
@@ -75,7 +75,7 @@ public class AdminController {
     }
     
     @PostMapping("/notice")
-    public ResponseEntity<String> publishNotice(@RequestBody PublishNoticeRequest noticeRequest) {
+    public ResponseEntity<String> publishNotice(@RequestBody NoticeRequest noticeRequest) {
        return ResponseEntity.ok(adminService.publishNotice(noticeRequest));
     }
     

@@ -5,7 +5,7 @@ import com.hrms.company_management.dto.GroupResponse;
 import com.hrms.company_management.dto.HolidayRequest;
 import com.hrms.company_management.dto.HolidayResponse;
 import com.hrms.company_management.dto.NoticeResponse;
-import com.hrms.company_management.dto.PublishNoticeRequest;
+import com.hrms.company_management.dto.NoticeRequest;
 import com.hrms.company_management.dto.RolesRequest;
 import com.hrms.company_management.entity.Holiday;
 import com.hrms.company_management.entity.Notice;
@@ -17,6 +17,8 @@ import com.hrms.company_management.repository.RoleGroupRepo;
 import com.hrms.company_management.repository.RoleRepo;
 import com.hrms.company_management.utility.CompanyManagementHelper;
 import com.hrms.company_management.utility.Constants;
+import com.hrms.company_management.utility.HolidayMapper;
+import com.hrms.company_management.utility.NoticeMapper;
 import com.hrms.company_management.utility.TenantContext;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +54,12 @@ public class AdminService {
 
     @Autowired
     HolidayRepo holidayRepository;
+
+    @Autowired
+    NoticeMapper noticeMapper;
+
+    @Autowired
+    HolidayMapper holidayMapper;
 
     @Value("${tenant_management_base_url}")
     private String tenantUrl;
@@ -96,12 +104,12 @@ public class AdminService {
     }
 
     private String createGroupInKeycloak(String realm, String group, String token) {
-            HttpHeaders headers = createHeaders(token);
+        HttpHeaders headers = createHeaders(token);
             String createGroupUrl = iamServiceBaseUrl + Constants.CREATE_GROUP + "?groupName=" + URLEncoder.encode(group, StandardCharsets.UTF_8) + "&realmName=" + URLEncoder.encode(realm, StandardCharsets.UTF_8);
             log.info("createGroupUrl:{}",createGroupUrl);
-            HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+        HttpEntity<String> requestEntity = new HttpEntity<>(headers);
             ResponseEntity<String> exchange = restTemplate.exchange(createGroupUrl, HttpMethod.POST, requestEntity, String.class);
-            return String.valueOf(exchange.getBody());
+        return String.valueOf(exchange.getBody());
     }
 
     public String getKeycloakToken(Map<String,Object> masterRealmDetails) {
@@ -114,7 +122,7 @@ public class AdminService {
         log.info("fetched the admin token succesfully");
 
         return response.getBody().get("token");
-        }
+    }
 
 
     private Map<String, Object> getMasterRealmDetails() {
@@ -256,12 +264,9 @@ public class AdminService {
     }
 
     // Notice Management
-    public String publishNotice(PublishNoticeRequest noticeRequest) {
+    public String publishNotice(NoticeRequest noticeRequest) {
 
-        Notice notice = new Notice();
-        notice.setTitle(noticeRequest.getTitle());
-        notice.setDescription(noticeRequest.getDescription());
-        notice.setNoticeType(noticeRequest.getNoticeType());
+        Notice notice = noticeMapper.convertToEntity(noticeRequest);
         Notice savedNotice = noticeRepository.save(notice);
         if (savedNotice.getId() != null) {
             return "Notice published successfully";
@@ -271,34 +276,19 @@ public class AdminService {
     }
 
     public List<NoticeResponse> getAllNotices() {
-        List<Notice> notices = noticeRepository.findAll();
 
+        List<Notice> notices = noticeRepository.findAll();
         if (notices.isEmpty()) {
             throw new RuntimeException("No notices found");
         }
-        List<NoticeResponse> noticeResponses = notices.stream()
-                .map(notice -> {
-                    NoticeResponse response = new NoticeResponse();
-                    response.setId(notice.getId());
-                    response.setTitle(notice.getTitle());
-                    response.setDescription(notice.getDescription());
-                    response.setNoticeType(notice.getNoticeType());
-                    response.setCreatedAt(notice.getCreatedAt());
-                    response.setUpdatedAt(notice.getUpdatedAt());
-                    return response;
-                })
-                .collect(Collectors.toList());
-
+        List<NoticeResponse> noticeResponses = noticeMapper.convertToResponseList(notices);
         return noticeResponses;
 
     }
 
     public String addHoliday(HolidayRequest holidayRequest) {
-        Holiday holiday = new Holiday();
-        holiday.setName(holidayRequest.getName());
-        holiday.setDate(LocalDate.parse(holidayRequest.getDate()));
-        holiday.setType(holidayRequest.getType());
 
+        Holiday holiday = holidayMapper.convertToEntity(holidayRequest);
         Holiday savedHoliday = holidayRepository.save(holiday);
         if (savedHoliday.getId() != null) {
             return "Holiday added successfully";
@@ -308,22 +298,12 @@ public class AdminService {
     }
 
     public List<HolidayResponse> getAllHolidays() {
-        List<Holiday> holidays = holidayRepository.findAll();
 
+        List<Holiday> holidays = holidayRepository.findAll();
         if (holidays.isEmpty()) {
             throw new RuntimeException("No holidays found");
         }
-        List<HolidayResponse> holidayResponses = holidays.stream()
-                .map(holiday -> {
-                    HolidayResponse response = new HolidayResponse();
-                    response.setId(holiday.getId());
-                    response.setName(holiday.getName());
-                    response.setDate(holiday.getDate().toString());
-                    response.setType(holiday.getType());
-                    return response;
-                })
-                .collect(Collectors.toList());
-
+        List<HolidayResponse> holidayResponses = holidayMapper.convertToResponseList(holidays);
         return holidayResponses;
     }
 
