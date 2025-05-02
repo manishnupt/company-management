@@ -7,19 +7,14 @@ import com.hrms.company_management.dto.HolidayResponse;
 import com.hrms.company_management.dto.NoticeResponse;
 import com.hrms.company_management.dto.NoticeRequest;
 import com.hrms.company_management.dto.RolesRequest;
-import com.hrms.company_management.entity.Holiday;
-import com.hrms.company_management.entity.Notice;
-import com.hrms.company_management.entity.Role;
-import com.hrms.company_management.entity.RoleGroup;
-import com.hrms.company_management.repository.HolidayRepo;
-import com.hrms.company_management.repository.NoticeRepo;
-import com.hrms.company_management.repository.RoleGroupRepo;
-import com.hrms.company_management.repository.RoleRepo;
+import com.hrms.company_management.entity.*;
+import com.hrms.company_management.repository.*;
 import com.hrms.company_management.utility.CompanyManagementHelper;
 import com.hrms.company_management.utility.Constants;
 import com.hrms.company_management.utility.HolidayMapper;
 import com.hrms.company_management.utility.NoticeMapper;
 import com.hrms.company_management.utility.TenantContext;
+import com.hrms.company_management.utility.PolicyHelper;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +27,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -61,11 +55,20 @@ public class AdminService {
     @Autowired
     HolidayMapper holidayMapper;
 
+    @Autowired
+    private PolicyRepo policyRepo;
+
+    @Autowired
+    private PolicyAttributeRepository policyAttributeRepository;
+
     @Value("${tenant_management_base_url}")
     private String tenantUrl;
 
     @Value("${iam_service_base_url}")
     private String iamServiceBaseUrl;
+
+    @Autowired
+    private AttributeValueRepository attributeValueRepository;
 
 
 
@@ -307,4 +310,82 @@ public class AdminService {
         return holidayResponses;
     }
 
+    public ResponseEntity<String> companyPolicy(Map<String, Object> request) {
+        log.info("Received request for company policy update: {}", request);
+
+        Map<String, Object> policyRules = (Map<String, Object>) request.get("policyRules");
+        if (policyRules == null) {
+            log.warn("No 'policyRules' key found in request.");
+            return ResponseEntity.badRequest().body("'policyRules' is required.");
+        }
+
+        Map<String, Map<String, String>> policyData = PolicyHelper.extractPolicyData(policyRules);
+        log.info("Extracted policy data: {}", policyData);
+
+        boolean hasAnyChange = false;
+        int latestVersion = attributeValueRepository.findMaxVersion().orElse(0);
+        int newVersion = latestVersion + 1;
+        log.info("Latest version: {} | New version to apply: {}", latestVersion, newVersion);
+
+        List<AttributeValue> newAttributeValues = new ArrayList<>();
+
+        for (Map.Entry<String, Map<String, String>> policyEntry : policyData.entrySet()) {
+            String policyName = policyEntry.getKey();
+            Map<String, String> attributes = policyEntry.getValue();
+            log.info("Processing policy: {}", policyName);
+
+            // Get or create Policy
+            Policy policy = policyRepo.findByPolicyName(policyName)
+                    .orElseGet(() -> {
+                        log.info("Policy '{}' not found. Creating new one.", policyName);
+                        Policy p = new Policy();
+                        p.setPolicyName(policyName);
+                        return policyRepo.save(p);
+                    });
+
+            for (Map.Entry<String, String> attrEntry : attributes.entrySet()) {
+                String attrName = attrEntry.getKey();
+                String newValue = attrEntry.getValue();
+                log.info("Processing attribute '{}' with new value '{}'", attrName, newValue);
+
+                // Get or create PolicyAttribute
+                PolicyAttribute attribute = policyAttributeRepository.findByPolicyAndAttributeName(policy, attrName)
+                        .orElseGet(() -> {
+                            log.info("Attribute '{}' not found for policy '{}'. Creating new one.", attrName, policyName);
+                            PolicyAttribute pa = new PolicyAttribute();
+                            pa.setPolicy(policy);
+                            pa.setAttributeName(attrName);
+                            return policyAttributeRepository.save(pa);
+                        });
+
+                // Fetch latest AttributeValue
+                Optional<AttributeValue> latestAttrValueOpt = attributeValueRepository
+                        .findTopByPolicyAttributeOrderByVersionDesc(attribute);
+
+                String oldValue = latestAttrValueOpt.map(AttributeValue::getAttributeValue).orElse(null);
+                log.info("Old value: '{}' | New value: '{}'", oldValue, newValue);
+
+                if (!Objects.equals(oldValue, newValue)) {
+                    hasAnyChange = true;
+                    log.info("Change detected for attribute '{}'.", attrName);
+                }
+
+                // Prepare new AttributeValue
+                AttributeValue newAttrVal = new AttributeValue();
+                newAttrVal.setPolicyAttribute(attribute);
+                newAttrVal.setAttributeValue(newValue);
+                newAttrVal.setVersion(newVersion);
+                newAttributeValues.add(newAttrVal);
+            }
+        }
+
+        if (hasAnyChange) {
+            log.info("Changes detected. Saving new AttributeValues with version {}.", newVersion);
+            attributeValueRepository.saveAll(newAttributeValues);
+            return ResponseEntity.ok("New version " + newVersion + " created with updated values.");
+        } else {
+            log.info("No changes detected. Skipping database update.");
+            return ResponseEntity.ok("No changes detected. No new version created.");
+        }
+    }
 }
