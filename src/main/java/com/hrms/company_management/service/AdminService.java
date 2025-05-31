@@ -290,6 +290,7 @@ public class AdminService {
     }
 
     public String addHoliday(HolidayRequest holidayRequest) {
+        log.info("the request received :{}",holidayRequest);
 
         Holiday holiday = holidayMapper.convertToEntity(holidayRequest);
         Holiday savedHoliday = holidayRepository.save(holiday);
