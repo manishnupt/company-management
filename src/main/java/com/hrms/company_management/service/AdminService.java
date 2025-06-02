@@ -230,11 +230,12 @@ public class AdminService {
     public Set<String> getModulesForRoles(RolesRequest rolesRequest) {
         Set<String> roles =rolesRequest.getRoles();
         List<Role> allRoles = roleRepo.findAll();
-        log.info("total roles count:{}",allRoles.size());
+        log.info("total roles count:{}",allRoles);
         Set<String> modules = new HashSet<>();
         for(Role role:allRoles){
             if(roles.contains(role.getName())) {
-                log.info("role present adding to modules list :{]",role.getModule());
+                log.info("role present adding to modules list :{}",role.getModule());
+
                 modules.add(role.getModule());
             }
         }
