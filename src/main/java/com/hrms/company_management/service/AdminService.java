@@ -283,7 +283,7 @@ public class AdminService {
 
         List<Notice> notices = noticeRepository.findAll();
         if (notices.isEmpty()) {
-            throw new RuntimeException("No notices found");
+           return new ArrayList<>();
         }
         List<NoticeResponse> noticeResponses = noticeMapper.convertToResponseList(notices);
         return noticeResponses;
