@@ -4,5 +4,6 @@ public enum DisbursalFrequency {
     MONTHLY,
     QUARTERLY,
     HALF_YEARLY,
-    YEARLY
+    YEARLY,
+    ONCE
 }
