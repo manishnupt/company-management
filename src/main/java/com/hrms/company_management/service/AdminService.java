@@ -306,7 +306,7 @@ public class AdminService {
 
         List<Holiday> holidays = holidayRepository.findAll();
         if (holidays.isEmpty()) {
-            throw new RuntimeException("No holidays found");
+            return new ArrayList<>();
         }
         List<HolidayResponse> holidayResponses = holidayMapper.convertToResponseList(holidays);
         return holidayResponses;
