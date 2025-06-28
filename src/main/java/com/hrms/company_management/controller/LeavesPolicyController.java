@@ -39,6 +39,19 @@ public class LeavesPolicyController {
         }
     }
 
+    @GetMapping("/schedule/{type}")
+    public ResponseEntity<List<LeaveType>> getByType(@PathVariable String type) {
+        try {
+            List<LeaveType> leaveType = service.getByType(type);
+            return ResponseEntity.ok(leaveType);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(null);
+        }
+    }
+
+
+
     @PostMapping
     public ResponseEntity<LeaveType> create(@RequestBody LeaveType leaveType) {
         try {

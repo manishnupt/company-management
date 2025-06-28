@@ -2,6 +2,7 @@ package com.hrms.company_management.service;
 
 import com.hrms.company_management.entity.LeaveType;
 import com.hrms.company_management.repository.LeavePolicyRepository;
+import com.hrms.company_management.utility.DisbursalFrequency;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,11 @@ public class LeavePolicyService {
 
     public LeaveType getById(String id) {
         return repository.findById(id).orElse(null);
+    }
+
+    public List<LeaveType> getByType(String type) {
+        DisbursalFrequency disbursalFrequency = DisbursalFrequency.valueOf(type.toUpperCase());
+            return repository.findByDisbursalFrequency(disbursalFrequency);
     }
 
     public LeaveType create(LeaveType leaveType) {
