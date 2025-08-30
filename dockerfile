@@ -1,10 +1,14 @@
-# build phase
-COPY . /app/
+FROM maven:3.8.4-openjdk-17-slim AS maven_cache
 
-# Create Maven settings.xml with GitHub authentication
-RUN mkdir -p /app/.m2
-RUN echo '<settings><servers><server><id>github</id><username>'${GITHUB_USERNAME}'</username><password>'${GITHUB_TOKEN}'</password></server></servers></settings>' > /app/.m2/settings.xml
+# Set the working directory in the container
+WORKDIR /app
 
-# Run Maven with the custom settings file
-RUN --mount=type=cache,id=s/e748f2be-628d-49c6-83aa-472ebc471f57-m2/repository,target=/app/.m2/repository \
-    mvn -s /app/.m2/settings.xml -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install
+COPY pom.xml .
+
+COPY src ./src
+COPY target/company-management-0.0.1-SNAPSHOT.jar .
+# Expose the port that the Spring Boot application will run on
+EXPOSE 9910
+
+# Define the command to run the Spring Boot application when the container starts
+CMD ["java", "-jar", "company-management-0.0.1-SNAPSHOT.jar"]
