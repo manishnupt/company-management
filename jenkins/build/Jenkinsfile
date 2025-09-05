@@ -3,7 +3,7 @@
 java_hrms_generic(
 
     [
-        ecrRepoName: "mynx-use1-hrms-stage-cmp-mgmt-ecr",
+        ecrRepoName: "mynx-use1-hrms-stage-company-mgmt-ecr",
         gitRepoName: "company-management",
         awsAccountId: "742428948447",
         env: "hrms-stage",
