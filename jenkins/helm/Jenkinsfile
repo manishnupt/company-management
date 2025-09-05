@@ -1,6 +1,6 @@
 @Library(value="ci@master", changelog=false) _
 
-helm_generic([
+helm_hrms_generic([
     directoryPath: "charts/cmp-mgmt",
     imageName: "mynx-use1-pp-cmp-mgmt-ecr",
     app: "cmp-mgmt",
