@@ -177,7 +177,7 @@ public class AdminService {
             // Create RestTemplate instance
             RestTemplate restTemplate = new RestTemplate();
 
-            String url = iamServiceBaseUrl + "/assign-group-roles?groupId=" + id + "&realmName=" + currentTenant;
+            String url = iamServiceBaseUrl + "/iamcontroller/assign-group-roles?groupId=" + id + "&realmName=" + currentTenant;
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
