@@ -1,10 +1,13 @@
 package com.hrms.company_management.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.hrms.company_management.entity.WFHType;
 import com.hrms.company_management.repository.WFHRepository;
+import com.hrms.company_management.utility.DisbursalFrequency;
 
 @Service
 public class WFHService {
@@ -48,6 +51,12 @@ public class WFHService {
             return false;
         repository.deleteById(id);
         return true;
+    }
+
+    public List<WFHType> getByType(String type) {
+         DisbursalFrequency disbursalFrequency = DisbursalFrequency.valueOf(type.toUpperCase());
+            return repository.findByDisbursalFrequency(disbursalFrequency);
+        
     }
 
 }

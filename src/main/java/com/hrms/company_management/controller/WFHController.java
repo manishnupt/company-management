@@ -1,18 +1,21 @@
 package com.hrms.company_management.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hrms.company_management.entity.WFHType;
 import com.hrms.company_management.service.WFHService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/wfh")
@@ -66,6 +69,17 @@ public class WFHController {
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    @GetMapping("schedule/{type}")
+    public ResponseEntity<List<WFHType>> getSchedule(@PathVariable String type) {
+        try {
+            List<WFHType> wfhType = wfhService.getByType(type);
+            return ResponseEntity.ok(wfhType);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(null);
         }
     }
 
