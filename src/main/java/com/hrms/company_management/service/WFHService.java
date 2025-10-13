@@ -1,6 +1,7 @@
 package com.hrms.company_management.service;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,16 +19,18 @@ public class WFHService {
     // Add service methods here
     // create
     public WFHType createWFHType(WFHType wfhType) {
+        wfhType.setId(UUID.randomUUID().toString());
         return repository.save(wfhType);
     }
 
     // get all
-    public java.util.List<WFHType> getAllWFHTypes() {
+    public List<WFHType> getAllWFHTypes() {
         return repository.findAll();
     }
 
     // read
     public WFHType getWFHTypeById(String id) {
+        System.out.println(id);
         return repository.findById(id).orElse(null);
     }
 

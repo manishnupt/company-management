@@ -24,9 +24,8 @@ public class WFHController {
     @Autowired
     private WFHService wfhService;
 
-    // Define your endpoints here crud
     // Create
-    @PostMapping
+    @PostMapping("/apply")
     public ResponseEntity<WFHType> createWFHType(@RequestBody WFHType wfhType) {
         WFHType created = wfhService.createWFHType(wfhType);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -40,8 +39,8 @@ public class WFHController {
     }
 
     // Read
-    @GetMapping
-    public ResponseEntity<WFHType> getWFHTypeById(@RequestParam String id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<WFHType> getWFHTypeById(@PathVariable String id) {
         WFHType wfhType = wfhService.getWFHTypeById(id);
         if (wfhType != null) {
             return ResponseEntity.ok(wfhType);
@@ -72,7 +71,7 @@ public class WFHController {
         }
     }
 
-    @GetMapping("schedule/{type}")
+    @GetMapping("/schedule/{type}")
     public ResponseEntity<List<WFHType>> getSchedule(@PathVariable String type) {
         try {
             List<WFHType> wfhType = wfhService.getByType(type);
