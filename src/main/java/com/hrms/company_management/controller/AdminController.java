@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @RestController
 @RequestMapping("/admin")
@@ -59,6 +62,15 @@ public class AdminController {
             @RequestBody AssignRolesRequest request) {
 
         RoleGroup updatedGroup = adminService.assignRoles(groupId, request.getRoleNames());
+        return ResponseEntity.ok(updatedGroup);
+    }
+
+    @PostMapping("group/{groupId}/remove-roles")
+    public ResponseEntity<RoleGroup> removeRolesFromGroup(
+            @PathVariable Long groupId,
+            @RequestBody AssignRolesRequest request) {
+
+        RoleGroup updatedGroup = adminService.removeRoles(groupId, request.getRoleNames());
         return ResponseEntity.ok(updatedGroup);
     }
 
