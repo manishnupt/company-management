@@ -106,6 +106,18 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllHolidays());
     }
 
+    @PutMapping("/holiday/{id}")
+    public ResponseEntity<HolidayResponse> updateHoliday(@PathVariable Long id, @RequestBody HolidayRequest holidayRequest) {
+        return ResponseEntity.ok(adminService.updateHoliday(id, holidayRequest));
+    }
+    
+    @DeleteMapping("/holiday/{id}")
+    public ResponseEntity<String> deleteHoliday(@PathVariable Long id) {
+        return ResponseEntity.ok(adminService.deleteHoliday(id));
+    }
+
+
+
     @PostMapping("/company-policy")
     public ResponseEntity<String> companyPolicy(@RequestBody Map<String, Object> request){
        return adminService.companyPolicy(request);

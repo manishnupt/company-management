@@ -415,5 +415,30 @@ public class AdminService {
         }
     }
 
+    public HolidayResponse updateHoliday(Long id, HolidayRequest holidayRequest) {
+        Optional<Holiday> existingHolidayOpt = holidayRepository.findById(id);
+        if (existingHolidayOpt.isEmpty()) {
+            throw new RuntimeException("Holiday not found with id: " + id);
+        }
+
+        Holiday existingHoliday = existingHolidayOpt.get();
+        existingHoliday.setName(holidayRequest.getName());
+        existingHoliday.setDate(holidayRequest.getDate());
+        existingHoliday.setType(holidayRequest.getType());
+
+        Holiday updatedHoliday = holidayRepository.save(existingHoliday);
+        return holidayMapper.convertToResponse(updatedHoliday);
+    }
+
+    public String deleteHoliday(Long id) {
+        Optional<Holiday> existingHolidayOpt = holidayRepository.findById(id);
+        if (existingHolidayOpt.isEmpty()) {
+            throw new RuntimeException("Holiday not found with id: " + id);
+        }
+        holidayRepository.deleteById(id);
+        return "Holiday deleted successfully";
+
+    }
+
    
 }
