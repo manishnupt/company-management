@@ -1,13 +1,6 @@
 package com.hrms.company_management.controller;
 
-import com.hrms.company_management.dto.AssignRolesRequest;
-import com.hrms.company_management.dto.GroupResponse;
-import com.hrms.company_management.dto.HolidayRequest;
-import com.hrms.company_management.dto.HolidayResponse;
-import com.hrms.company_management.dto.ModulesRequest;
-import com.hrms.company_management.dto.NoticeResponse;
-import com.hrms.company_management.dto.NoticeRequest;
-import com.hrms.company_management.dto.RolesRequest;
+import com.hrms.company_management.dto.*;
 import com.hrms.company_management.entity.RoleGroup;
 import com.hrms.company_management.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,7 +39,7 @@ public class AdminController {
     }
 
     @GetMapping("/group/{groupId}/roles")
-    public Map<String,String> getAllRolesByGroups(@PathVariable Long groupId){
+    public List<GroupRolesResponse> getAllRolesByGroups(@PathVariable Long groupId){
         return  adminService.getAllRolesByGroup(groupId);
     }
 

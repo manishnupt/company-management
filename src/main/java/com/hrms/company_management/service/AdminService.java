@@ -1,12 +1,6 @@
 package com.hrms.company_management.service;
 
-import com.hrms.company_management.dto.GenerateTokenRequest;
-import com.hrms.company_management.dto.GroupResponse;
-import com.hrms.company_management.dto.HolidayRequest;
-import com.hrms.company_management.dto.HolidayResponse;
-import com.hrms.company_management.dto.NoticeResponse;
-import com.hrms.company_management.dto.NoticeRequest;
-import com.hrms.company_management.dto.RolesRequest;
+import com.hrms.company_management.dto.*;
 import com.hrms.company_management.entity.*;
 import com.hrms.company_management.repository.*;
 import com.hrms.company_management.utility.CompanyManagementHelper;
@@ -230,14 +224,20 @@ public class AdminService {
 
     }
 
-    public Map<String, String> getAllRolesByGroup(Long groupId) {
+    public List<GroupRolesResponse> getAllRolesByGroup(Long groupId) {
         RoleGroup groupById = roleGroupRepo.findById(groupId).get();
         Set<Role> roles = groupById.getRoles();
-        Map<String, String> hm = new HashMap<>();
-        for (Role role : roles) {
-            hm.put(role.getName(), role.getDescription());
+
+        List<GroupRolesResponse> groupRolesResponses = new ArrayList<>();
+
+        for(Role role:roles){
+            GroupRolesResponse response = new GroupRolesResponse();
+            response.setGroupRoleId(role.getId());
+            response.setRoleName(role.getName());
+            response.setRoleDescription(role.getDescription());
+            groupRolesResponses.add(response);
         }
-        return hm;
+        return groupRolesResponses;
     }
 
     public RoleGroup getGroupById(Long groupId) {
