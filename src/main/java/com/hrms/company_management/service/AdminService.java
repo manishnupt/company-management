@@ -100,13 +100,46 @@ public class AdminService {
         return createGroupInKeycloak(tenant, groupName, token);
     }
 
-    public String handleKeycloakGroupRoleRemoval(String id, List<String> roleNames, String currentTenant) {
+    public String handleKeycloakGroupRoleRemoval(String id, String roleId, String currentTenant) {
 
         Map<String,Object> masterRealmDetails =getMasterRealmDetails();
         String token=getKeycloakToken(masterRealmDetails);
         log.info("token:{}",token);
-        assignRoleToGroupKC(token,id,roleNames,currentTenant);
+        unassignRoleToGroupKC(token,id,roleId,currentTenant);
         return "Roles removed successfully from group in keycloak";
+    }
+
+    private void unassignRoleToGroupKC(String token, String id, String roleId, String currentTenant) {
+
+        try {
+
+            String url = iamServiceBaseUrl + "/iamcontroller/remove-group-roles?realmName=" + currentTenant + "&groupId=" + id;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", token);
+            List<UUID> roleIds = new ArrayList<>();
+            roleIds.add(UUID.fromString(roleId));
+
+            HttpEntity<List<UUID>> requestEntity = new HttpEntity<>(roleIds, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.DELETE,
+                    requestEntity,
+                    String.class
+            );
+
+            // Handle the response
+            if (response.getStatusCode() == HttpStatus.OK) {
+                System.out.println("Roles assigned successfully: " + response.getBody());
+            } else {
+                System.out.println("Failed to assign roles. Status code: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            System.err.println("Error calling assign-group-roles API: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private String createGroupInKeycloak(String realm, String group, String token) {
@@ -164,21 +197,6 @@ public class AdminService {
         handleKeycloakGroupRoleAssignment(group.getKcGroupIdRef(),roleNames,TenantContext.getCurrentTenant());
 
         group.getRoles().addAll(roles);
-        return roleGroupRepo.save(group);
-    }
-
-     public RoleGroup removeRoles(Long groupId, List<String> roleNames) {
-        RoleGroup group = roleGroupRepo.findById(groupId)
-                .orElseThrow(() -> new RuntimeException("Group not found"));
-
-        Set<Role> rolesToRemove = roleNames.stream()
-                .map(roleName -> roleRepo.findByName(roleName)
-                        .orElseThrow(() -> new RuntimeException("Role not found: " + roleName)))
-                .collect(Collectors.toSet());
-
-        handleKeycloakGroupRoleRemoval(group.getKcGroupIdRef(),roleNames,TenantContext.getCurrentTenant());
-
-        group.getRoles().removeAll(rolesToRemove);
         return roleGroupRepo.save(group);
     }
 
@@ -440,5 +458,22 @@ public class AdminService {
 
     }
 
-   
+
+    public String removeRoleFromGroup(Long groupId, Long roleId) {
+        RoleGroup group = roleGroupRepo.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+
+        RoleGroup role = roleGroupRepo.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+
+        if (!group.getRoles().contains(role)) {
+            throw new RuntimeException("Role not assigned to the group");
+        }
+
+        handleKeycloakGroupRoleRemoval(group.getKcGroupIdRef(),role.getKcGroupIdRef() , TenantContext.getCurrentTenant());
+
+        group.getRoles().remove(role);
+        roleGroupRepo.save(group);
+        return "Role removed from group successfully";
+    }
 }

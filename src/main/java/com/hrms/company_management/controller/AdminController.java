@@ -56,16 +56,6 @@ public class AdminController {
         RoleGroup updatedGroup = adminService.assignRoles(groupId, request.getRoleNames());
         return ResponseEntity.ok(updatedGroup);
     }
-
-    @PostMapping("group/{groupId}/remove-roles")
-    public ResponseEntity<RoleGroup> removeRolesFromGroup(
-            @PathVariable Long groupId,
-            @RequestBody AssignRolesRequest request) {
-
-        RoleGroup updatedGroup = adminService.removeRoles(groupId, request.getRoleNames());
-        return ResponseEntity.ok(updatedGroup);
-    }
-
     @PostMapping("/modules")
     public ResponseEntity<Set<String>> getModulesForRoles(@RequestBody RolesRequest rolesRequest) {
 
@@ -113,6 +103,12 @@ public class AdminController {
     @PostMapping("/company-policy")
     public ResponseEntity<String> companyPolicy(@RequestBody Map<String, Object> request){
        return adminService.companyPolicy(request);
+    }
+
+    @DeleteMapping("/group/{groupId}/role/{roleId}")
+    public ResponseEntity<String> removeRoleFromGroup(@PathVariable Long groupId, @PathVariable Long roleId) {
+        String response = adminService.removeRoleFromGroup(groupId, roleId);
+        return ResponseEntity.ok(response);
     }
 
 }
