@@ -105,7 +105,7 @@ public class AdminController {
        return adminService.companyPolicy(request);
     }
 
-    @DeleteMapping("/group/{groupId}/role/{roleId}")
+    @DeleteMapping("/group/{groupId}/roles/{roleId}")
     public ResponseEntity<String> removeRoleFromGroup(@PathVariable Long groupId, @PathVariable Long roleId) {
         String response = adminService.removeRoleFromGroup(groupId, roleId);
         return ResponseEntity.ok(response);
