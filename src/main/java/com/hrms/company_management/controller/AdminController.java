@@ -23,7 +23,7 @@ public class AdminController {
     AdminService adminService;
 
     @GetMapping("/role")
-    public Map<String,String> getRoles(){
+    public List<GroupRolesResponse> getRoles(){
         return adminService.getRoles();
     }
 

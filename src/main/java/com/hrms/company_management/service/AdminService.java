@@ -67,13 +67,17 @@ public class AdminService {
 
 
 
-    public Map<String, String> getRoles() {
+    public List<GroupRolesResponse> getRoles() {
         List<Role> allRoles = roleRepo.findAll();
-        Map<String, String> hm = new HashMap<>();
+        List<GroupRolesResponse> groupRolesResponses = new ArrayList<>();
         for (Role role : allRoles) {
-            hm.put(role.getName(), role.getDescription());
+            GroupRolesResponse response = new GroupRolesResponse();
+            response.setGroupRoleId(role.getId());
+            response.setRoleName(role.getName());
+            response.setRoleDescription(role.getDescription());
+            groupRolesResponses.add(response);
         }
-        return hm;
+        return groupRolesResponses;
     }
 
     public String createGroup(String groupName, String groupDescription) {
@@ -115,9 +119,12 @@ public class AdminService {
 
             String url = iamServiceBaseUrl + "/iamcontroller/remove-group-roles?realmName=" + currentTenant + "&groupId=" + id;
 
+            log.info("unassignRoleToGroupKC url:{}",url);
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Authorization", token);
+            log.info("token in header:{}",token);
             List<String> roleNames = new ArrayList<>();
             roleNames.add(roleName);
 
