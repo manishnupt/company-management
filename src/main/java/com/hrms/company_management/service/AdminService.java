@@ -100,16 +100,16 @@ public class AdminService {
         return createGroupInKeycloak(tenant, groupName, token);
     }
 
-    public String handleKeycloakGroupRoleRemoval(String id, String roleId, String currentTenant) {
+    public String handleKeycloakGroupRoleRemoval(String id, String roleName, String currentTenant) {
 
         Map<String,Object> masterRealmDetails =getMasterRealmDetails();
         String token=getKeycloakToken(masterRealmDetails);
         log.info("token:{}",token);
-        unassignRoleToGroupKC(token,id,roleId,currentTenant);
+        unassignRoleToGroupKC(token,id,roleName,currentTenant);
         return "Roles removed successfully from group in keycloak";
     }
 
-    private void unassignRoleToGroupKC(String token, String id, String roleId, String currentTenant) {
+    private void unassignRoleToGroupKC(String token, String id, String roleName, String currentTenant) {
 
         try {
 
@@ -118,10 +118,10 @@ public class AdminService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Authorization", token);
-            List<UUID> roleIds = new ArrayList<>();
-            roleIds.add(UUID.fromString(roleId));
+            List<String> roleNames = new ArrayList<>();
+            roleNames.add(roleName);
 
-            HttpEntity<List<UUID>> requestEntity = new HttpEntity<>(roleIds, headers);
+            HttpEntity<List<String>> requestEntity = new HttpEntity<>(roleNames, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
                     url,
@@ -463,14 +463,19 @@ public class AdminService {
         RoleGroup group = roleGroupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found"));
 
-        RoleGroup role = roleGroupRepo.findById(roleId)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+        Role role =null;
 
-        if (!group.getRoles().contains(role)) {
+        for(Role r:group.getRoles()){
+            if(r.getId().equals(roleId)){
+                role=r;
+                break;
+            }
+        }
+        if (role==null) {
             throw new RuntimeException("Role not assigned to the group");
         }
 
-        handleKeycloakGroupRoleRemoval(group.getKcGroupIdRef(),role.getKcGroupIdRef() , TenantContext.getCurrentTenant());
+        handleKeycloakGroupRoleRemoval(group.getKcGroupIdRef(),role.getName() , TenantContext.getCurrentTenant());
 
         group.getRoles().remove(role);
         roleGroupRepo.save(group);
