@@ -32,6 +32,16 @@ public class AdminController {
         return adminService.createGroup(groupName,groupDescription);
     }
 
+    @PutMapping("/group/{groupId}")
+    public ResponseEntity<RoleGroup> updateGroup(
+            @PathVariable Long groupId,
+            @RequestParam String groupName,
+            @RequestParam String groupDescription) {
+
+        RoleGroup updatedGroup = adminService.updateGroup(groupId, groupName, groupDescription);
+        return ResponseEntity.ok(updatedGroup);
+    }
+
 
     @GetMapping("/group")
     public List<GroupResponse> getAllGroups(){

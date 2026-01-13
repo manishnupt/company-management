@@ -9,6 +9,7 @@ import com.hrms.company_management.utility.HolidayMapper;
 import com.hrms.company_management.utility.NoticeMapper;
 import com.hrms.company_management.utility.TenantContext;
 import com.hrms.company_management.utility.PolicyHelper;
+import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -487,5 +488,33 @@ public class AdminService {
         group.getRoles().remove(role);
         roleGroupRepo.save(group);
         return "Role removed from group successfully";
+    }
+
+    @Transactional
+    public RoleGroup updateGroup(Long groupId, String groupName, String groupDescription) {
+        RoleGroup group = roleGroupRepo.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+
+        group.setName(groupName);
+        group.setDescription(groupDescription);
+        handleKeycloakGroupUpdate(group.getKcGroupIdRef(),groupName,TenantContext.getCurrentTenant());
+
+        return roleGroupRepo.save(group);
+    }
+
+    private void handleKeycloakGroupUpdate(String kcGroupIdRef, String groupName, String currentTenant) {
+        Map<String,Object> masterRealmDetails =getMasterRealmDetails();
+        String token=getKeycloakToken(masterRealmDetails);
+        log.info("token:{}",token);
+        updateGroupInKeycloak(kcGroupIdRef,groupName,token,currentTenant);
+    }
+
+    private void updateGroupInKeycloak(String kcGroupIdRef, String groupName, String token, String currentTenant) {
+        HttpHeaders headers = createHeaders(token);
+        String updateGroupUrl = iamServiceBaseUrl + Constants.UPDATE_GROUP + "?groupId=" + URLEncoder.encode(kcGroupIdRef, StandardCharsets.UTF_8) + "&groupName=" + URLEncoder.encode(groupName, StandardCharsets.UTF_8) + "&realmName=" + URLEncoder.encode(currentTenant, StandardCharsets.UTF_8);
+        log.info("updateGroupUrl:{}",updateGroupUrl);
+        HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+        ResponseEntity<String> exchange = restTemplate.exchange(updateGroupUrl, HttpMethod.PUT, requestEntity, String.class);
+        log.info("Keycloak group update response: {}", exchange.getBody());
     }
 }
