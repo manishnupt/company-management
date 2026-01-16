@@ -511,7 +511,7 @@ public class AdminService {
 
     private void updateGroupInKeycloak(String kcGroupIdRef, String groupName, String token, String currentTenant) {
         HttpHeaders headers = createHeaders(token);
-        String updateGroupUrl = iamServiceBaseUrl + Constants.UPDATE_GROUP + "?groupId=" + URLEncoder.encode(kcGroupIdRef, StandardCharsets.UTF_8) + "&groupName=" + URLEncoder.encode(groupName, StandardCharsets.UTF_8) + "&realmName=" + URLEncoder.encode(currentTenant, StandardCharsets.UTF_8);
+        String updateGroupUrl = iamServiceBaseUrl + Constants.UPDATE_GROUP + "?groupId=" + URLEncoder.encode(kcGroupIdRef, StandardCharsets.UTF_8) + "&newGroupName=" + URLEncoder.encode(groupName, StandardCharsets.UTF_8) + "&realmName=" + URLEncoder.encode(currentTenant, StandardCharsets.UTF_8);
         log.info("updateGroupUrl:{}",updateGroupUrl);
         HttpEntity<String> requestEntity = new HttpEntity<>(headers);
         ResponseEntity<String> exchange = restTemplate.exchange(updateGroupUrl, HttpMethod.PUT, requestEntity, String.class);
