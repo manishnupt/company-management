@@ -69,6 +69,7 @@ public class AdminService {
 
 
     public List<GroupRolesResponse> getRoles() {
+        log.info("getRoles called");
         List<Role> allRoles = roleRepo.findAll();
         List<GroupRolesResponse> groupRolesResponses = new ArrayList<>();
         for (Role role : allRoles) {
@@ -83,6 +84,7 @@ public class AdminService {
 
     public String createGroup(String groupName, String groupDescription) {
 
+        log.info("createGroup called with groupName:{}, groupDescription:{}", groupName, groupDescription);
         if (roleGroupRepo.findByName(groupName).isPresent()) {
             throw new RuntimeException("Group already exists");
         }
@@ -180,6 +182,7 @@ public class AdminService {
     }
 
     public List<GroupResponse> getAllGroups() {
+        log.info("getAllGroups called");
         List<RoleGroup> allGroupRoles = roleGroupRepo.findAll();
         List<GroupResponse> groupResponses = new ArrayList<>();
         for (RoleGroup roleGroup : allGroupRoles) {
@@ -194,6 +197,7 @@ public class AdminService {
     }
 
     public RoleGroup assignRoles(Long groupId, List<String> roleNames) {
+        log.info("assignRoles called with groupId:{}, roleNames:{}", groupId, roleNames);
         RoleGroup group = roleGroupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found"));
 
@@ -251,6 +255,7 @@ public class AdminService {
     }
 
     public List<GroupRolesResponse> getAllRolesByGroup(Long groupId) {
+        log.info("getAllRolesByGroup called with groupId:{}", groupId);
         RoleGroup groupById = roleGroupRepo.findById(groupId).get();
         Set<Role> roles = groupById.getRoles();
 
@@ -267,6 +272,7 @@ public class AdminService {
     }
 
     public RoleGroup getGroupById(Long groupId) {
+        log.info("getGroupById called with groupId:{}", groupId);
         RoleGroup group = roleGroupRepo.findById(groupId).get();
         GroupResponse response = new GroupResponse();
         response.setGroupId(group.getId());
@@ -293,6 +299,7 @@ public class AdminService {
     }
 
     public Set<String> getRolesByModules(List<String> moduleNames) {
+        log.info("getRolesByModules called with moduleNames:{}", moduleNames);
         List<Role> allRoles = roleRepo.findByModuleIn(moduleNames);
         Set<String> roles = new HashSet<>();
         for(Role role:allRoles){
@@ -320,6 +327,7 @@ public class AdminService {
     // Notice Management
     public String publishNotice(NoticeRequest noticeRequest) {
 
+        log.info("publishNotice called with noticeRequest:{}", noticeRequest);
         Notice notice = noticeMapper.convertToEntity(noticeRequest);
         Notice savedNotice = noticeRepository.save(notice);
         if (savedNotice.getId() != null) {
@@ -331,6 +339,7 @@ public class AdminService {
 
     public List<NoticeResponse> getAllNotices() {
 
+        log.info("getAllNotices called");
         List<Notice> notices = noticeRepository.findAll();
         if (notices.isEmpty()) {
            return new ArrayList<>();
@@ -354,6 +363,7 @@ public class AdminService {
 
     public List<HolidayResponse> getAllHolidays() {
 
+        log.info("getAllHolidays called");
         List<Holiday> holidays = holidayRepository.findAll();
         if (holidays.isEmpty()) {
             return new ArrayList<>();
@@ -442,6 +452,7 @@ public class AdminService {
     }
 
     public HolidayResponse updateHoliday(Long id, HolidayRequest holidayRequest) {
+        log.info("updateHoliday called with id:{}, holidayRequest:{}", id, holidayRequest);
         Optional<Holiday> existingHolidayOpt = holidayRepository.findById(id);
         if (existingHolidayOpt.isEmpty()) {
             throw new RuntimeException("Holiday not found with id: " + id);
@@ -457,6 +468,7 @@ public class AdminService {
     }
 
     public String deleteHoliday(Long id) {
+        log.info("deleteHoliday called with id:{}", id);
         Optional<Holiday> existingHolidayOpt = holidayRepository.findById(id);
         if (existingHolidayOpt.isEmpty()) {
             throw new RuntimeException("Holiday not found with id: " + id);
@@ -468,6 +480,7 @@ public class AdminService {
 
 
     public String removeRoleFromGroup(Long groupId, Long roleId) {
+        log.info("removeRoleFromGroup called with groupId:{}, roleId:{}", groupId, roleId);
         RoleGroup group = roleGroupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found"));
 
@@ -492,6 +505,7 @@ public class AdminService {
 
     @Transactional
     public RoleGroup updateGroup(Long groupId, String groupName, String groupDescription) {
+        log.info("updateGroup called with groupId:{}, groupName:{}, groupDescription:{}", groupId, groupName, groupDescription);
         RoleGroup group = roleGroupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found"));
 
