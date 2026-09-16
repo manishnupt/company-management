@@ -20,7 +20,7 @@ import com.hrms.company_management.service.WFHService;
 import lombok.extern.log4j.Log4j2;
 
 @RestController
-@RequestMapping("/wfh")
+@RequestMapping("/wfh-types")
 @CrossOrigin(origins = "*")
 @Log4j2
 public class WFHController {
@@ -28,7 +28,7 @@ public class WFHController {
     private WFHService wfhService;
 
     // Create
-    @PostMapping("/apply")
+    @PostMapping()
     public ResponseEntity<WFHResponse> createWFHType(@RequestBody WFHRequest wfhRequest) {
         log.info("Received request to create WFH type: {}", wfhRequest);
         WFHResponse created = wfhService.createWFHType(wfhRequest);
@@ -36,7 +36,7 @@ public class WFHController {
     }
 
     // get all
-    @GetMapping("/list")
+    @GetMapping()
     public ResponseEntity<List<WFHResponse>> getAllWFHTypes() {
         log.info("Received request to fetch all WFH types");
         List<WFHResponse> wfhTypes = wfhService.getAllWFHTypes();
