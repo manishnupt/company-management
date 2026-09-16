@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hrms.company_management.entity.WFHType;
+import com.hrms.company_management.dto.WFHRequest;
+import com.hrms.company_management.dto.WFHResponse;
 import com.hrms.company_management.service.WFHService;
 import lombok.extern.log4j.Log4j2;
 
@@ -28,25 +29,25 @@ public class WFHController {
 
     // Create
     @PostMapping("/apply")
-    public ResponseEntity<WFHType> createWFHType(@RequestBody WFHType wfhType) {
-        log.info("Received request to create WFH type: {}", wfhType);
-        WFHType created = wfhService.createWFHType(wfhType);
+    public ResponseEntity<WFHResponse> createWFHType(@RequestBody WFHRequest wfhRequest) {
+        log.info("Received request to create WFH type: {}", wfhRequest);
+        WFHResponse created = wfhService.createWFHType(wfhRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     // get all
     @GetMapping("/list")
-    public ResponseEntity<java.util.List<WFHType>> getAllWFHTypes() {
+    public ResponseEntity<List<WFHResponse>> getAllWFHTypes() {
         log.info("Received request to fetch all WFH types");
-        java.util.List<WFHType> wfhTypes = wfhService.getAllWFHTypes();
+        List<WFHResponse> wfhTypes = wfhService.getAllWFHTypes();
         return ResponseEntity.ok(wfhTypes);
     }
 
     // Read
     @GetMapping("/{id}")
-    public ResponseEntity<WFHType> getWFHTypeById(@PathVariable String id) {
+    public ResponseEntity<WFHResponse> getWFHTypeById(@PathVariable String id) {
         log.info("Received request to fetch WFH type by id: {}", id);
-        WFHType wfhType = wfhService.getWFHTypeById(id);
+        WFHResponse wfhType = wfhService.getWFHTypeById(id);
         if (wfhType != null) {
             return ResponseEntity.ok(wfhType);
         } else {
@@ -56,9 +57,9 @@ public class WFHController {
 
     // Update
     @PostMapping("/update")
-    public ResponseEntity<WFHType> updateWFHType(@RequestParam String id, @RequestBody WFHType wfhType) {
+    public ResponseEntity<WFHResponse> updateWFHType(@RequestParam String id, @RequestBody WFHRequest wfhRequest) {
         log.info("Received request to update WFH type with id: {}", id);
-        WFHType updated = wfhService.updateWFHType(id, wfhType);
+        WFHResponse updated = wfhService.updateWFHType(id, wfhRequest);
         if (updated != null) {
             return ResponseEntity.ok(updated);
         } else {
@@ -79,10 +80,10 @@ public class WFHController {
     }
 
     @GetMapping("/schedule/{type}")
-    public ResponseEntity<List<WFHType>> getSchedule(@PathVariable String type) {
+    public ResponseEntity<List<WFHResponse>> getSchedule(@PathVariable String type) {
         log.info("Received request to fetch WFH schedule by type: {}", type);
         try {
-            List<WFHType> wfhType = wfhService.getByType(type);
+            List<WFHResponse> wfhType = wfhService.getByType(type);
             return ResponseEntity.ok(wfhType);
         } catch (Exception e) {
             e.printStackTrace();
