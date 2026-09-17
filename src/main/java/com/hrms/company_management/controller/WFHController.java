@@ -5,14 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.hrms.company_management.dto.WFHRequest;
 import com.hrms.company_management.dto.WFHResponse;
@@ -28,7 +21,7 @@ public class WFHController {
     private WFHService wfhService;
 
     // Create
-    @PostMapping()
+    @PostMapping
     public ResponseEntity<WFHResponse> createWFHType(@RequestBody WFHRequest wfhRequest) {
         log.info("Received request to create WFH type: {}", wfhRequest);
         WFHResponse created = wfhService.createWFHType(wfhRequest);
@@ -56,8 +49,8 @@ public class WFHController {
     }
 
     // Update
-    @PostMapping("/update")
-    public ResponseEntity<WFHResponse> updateWFHType(@RequestParam String id, @RequestBody WFHRequest wfhRequest) {
+    @PutMapping("/{id}")
+    public ResponseEntity<WFHResponse> updateWFHType(@PathVariable String id, @RequestBody WFHRequest wfhRequest) {
         log.info("Received request to update WFH type with id: {}", id);
         WFHResponse updated = wfhService.updateWFHType(id, wfhRequest);
         if (updated != null) {
