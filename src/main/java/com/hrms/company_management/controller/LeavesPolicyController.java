@@ -5,10 +5,12 @@ import com.hrms.company_management.dto.CreateLeaveTypeRequest;
 import com.hrms.company_management.dto.LeaveTypeResponse;
 import com.hrms.company_management.entity.LeaveType;
 import com.hrms.company_management.service.LeavePolicyService;
+import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
@@ -68,11 +70,13 @@ public class LeavesPolicyController {
     }
 
     @PostMapping("/leave-types/{policyId}")
-    public ResponseEntity<LeaveTypeResponse> create(@RequestBody CreateLeaveTypeRequest request,@PathVariable String policyId) {
+    public ResponseEntity<LeaveTypeResponse> create(@Valid @RequestBody CreateLeaveTypeRequest request,@PathVariable String policyId) {
         log.info("Received request to create leave type: {}", request);
         try {
             LeaveTypeResponse created = service.create(request,policyId);
             return ResponseEntity.ok(created);
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.ok(null);
@@ -86,6 +90,8 @@ public class LeavesPolicyController {
         try {
             LeaveType updated = service.update(id, leaveType);
             return ResponseEntity.ok(updated);
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.ok(null);
@@ -98,6 +104,8 @@ public class LeavesPolicyController {
         try {
             boolean result = service.delete(id);
             return ResponseEntity.ok(result);
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.ok(false);

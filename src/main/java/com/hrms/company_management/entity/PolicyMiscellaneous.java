@@ -1,5 +1,6 @@
 package com.hrms.company_management.entity;
 
+import com.hrms.company_management.utility.DressCode;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -31,8 +32,9 @@ public class PolicyMiscellaneous {
     )
     private Policy policy;
 
-    @Column(length = 500)
-    private String dressCode;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 50)
+    private DressCode dressCode;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

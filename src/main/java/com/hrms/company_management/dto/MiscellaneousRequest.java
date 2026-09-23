@@ -1,11 +1,12 @@
 package com.hrms.company_management.dto;
 
-import jakarta.validation.constraints.Size;
+import com.hrms.company_management.utility.DressCode;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class MiscellaneousRequest {
 
-    @Size(max = 500)
-    private String dressCode;
+    @NotNull
+    private DressCode dressCode;
 }

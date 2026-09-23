@@ -9,7 +9,9 @@ import com.hrms.company_management.dto.WfhTypeResponse;
 import com.hrms.company_management.entity.Policy;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.hrms.company_management.dto.WFHRequest;
 import com.hrms.company_management.dto.WFHResponse;
@@ -63,8 +65,14 @@ public class WFHService {
             log.info("WFH type not found with id: {}", id);
             return null;
         }
+        policyService.requireDraft(existing.getPolicy());
+        if (updatedWFHType.getName() == null || updatedWFHType.getName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "WFH type name is required");
+        }
+        String name = updatedWFHType.getName().trim();
+        requireUniqueName(existing.getPolicy().getId(), name, id);
 
-        existing.setName(updatedWFHType.getName());
+        existing.setName(name);
         existing.setTotalDays(updatedWFHType.getTotalDays());
         existing.setDisbursalFrequency(updatedWFHType.getDisbursalFrequency());
         existing.setDescription(updatedWFHType.getDescription());
@@ -75,10 +83,23 @@ public class WFHService {
     // delete
     public boolean deleteWFHType(String id) {
         log.info("Deleting WFH type with id: {}", id);
-        if (!repository.existsById(id))
+        WFHType existing = repository.findById(id).orElse(null);
+        if (existing == null)
             return false;
-        repository.deleteById(id);
+        policyService.requireDraft(existing.getPolicy());
+        repository.delete(existing);
         return true;
+    }
+
+    // WFH type names must be unique within a policy; excludeId skips the WFH type being updated
+    private void requireUniqueName(UUID policyId, String name, String excludeId) {
+        boolean exists = excludeId == null
+                ? repository.existsByPolicy_IdAndNameIgnoreCase(policyId, name)
+                : repository.existsByPolicy_IdAndNameIgnoreCaseAndIdNot(policyId, name, excludeId);
+        if (exists) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "WFH type '" + name + "' already exists in policy " + policyId);
+        }
     }
 
     public List<WFHResponse> getByType(String type) {
@@ -88,13 +109,16 @@ public class WFHService {
     }
 
     public WfhTypeResponse create(CreateWfhTypeRequest request, String policyId) {
-        Policy policyById = policyService.getPolicyEntityById(UUID.fromString(policyId));
+        Policy policyById = policyService.getDraftPolicyEntityById(UUID.fromString(policyId));
+        String name = request.getName().trim();
+        requireUniqueName(policyById.getId(), name, null);
 
         log.info("Creating WFH type: {}", request);
         WFHType wfhType = new WFHType();
         wfhType.setId(UUID.randomUUID().toString());
         wfhType.setPolicy(policyById);
-        wfhType.setName(request.getName());
+        wfhType.setName(name);
+        wfhType.setDescription(request.getDescription());
         wfhType.setTotalDays(request.getTotalDays());
         wfhType.setDisbursalFrequency(request.getDisbursalFrequency());
         WFHType saved = repository.save(wfhType);
@@ -103,8 +127,8 @@ public class WFHService {
 
     public List<WfhTypeResponse> getWfhTypeByPolicyId(String policyId) {
         log.info("Fetching WFH types by policy id: {}", policyId);
-        Policy policyById = policyService.getPolicyEntityById(UUID.fromString(policyId));
-        List<WFHType> wfhTypes = repository.findByPolicyId(policyById);
+        policyService.getPolicyEntityById(UUID.fromString(policyId));
+        List<WFHType> wfhTypes = repository.findByPolicy_Id(UUID.fromString(policyId));
         List<WfhTypeResponse> wfhTypeResponses = new ArrayList<>();
         for (WFHType wfhType : wfhTypes) {
             WfhTypeResponse response = wfhMapper.convertToWfhTypeResponse(wfhType);

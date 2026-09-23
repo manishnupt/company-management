@@ -8,7 +8,15 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "wfh_types")
+@Table(
+    name = "wfh_types",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_wfh_type_policy_name",
+            columnNames = {"policy_id", "name"}
+        )
+    }
+)
 public class WFHType {
 
     @Id

@@ -5,7 +5,15 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
-@Table(name = "leave_types")
+@Table(
+    name = "leave_types",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_leave_type_policy_name",
+            columnNames = {"policy_id", "name"}
+        )
+    }
+)
 @Data
 public class LeaveType {
     @Id

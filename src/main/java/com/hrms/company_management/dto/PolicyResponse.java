@@ -19,6 +19,8 @@ public class PolicyResponse {
 
     private Integer version;
 
+    private UUID rootPolicyId;
+
     private PolicyStatus status;
 
     private LocalDate effectiveFrom;

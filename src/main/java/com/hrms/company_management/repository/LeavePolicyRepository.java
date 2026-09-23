@@ -17,4 +17,8 @@ public interface LeavePolicyRepository extends JpaRepository<LeaveType, String> 
 
     List<LeaveType> findByPolicy_Id(UUID policyId);
 
+    boolean existsByPolicy_IdAndNameIgnoreCase(UUID policyId, String name);
+
+    boolean existsByPolicy_IdAndNameIgnoreCaseAndIdNot(UUID policyId, String name, String id);
+
 }

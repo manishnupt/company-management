@@ -1,5 +1,6 @@
 package com.hrms.company_management.dto;
 
+import com.hrms.company_management.utility.DressCode;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,5 +14,5 @@ public class MiscellaneousResponse {
 
     private UUID policyId;
 
-    private String dressCode;
+    private DressCode dressCode;
 }

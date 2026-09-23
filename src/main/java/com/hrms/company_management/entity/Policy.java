@@ -11,7 +11,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "policies")
+@Table(
+    name = "policies",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_policy_name_version",
+            columnNames = {"name", "version"}
+        )
+    }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,6 +37,10 @@ public class Policy {
 
     @Column(nullable = false)
     private Integer version = 1;
+
+    // shared by all versions of the same policy; equals id for version 1
+    @Column(name = "root_policy_id")
+    private UUID rootPolicyId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

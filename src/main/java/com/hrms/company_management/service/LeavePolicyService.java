@@ -9,7 +9,9 @@ import com.hrms.company_management.repository.LeavePolicyRepository;
 import com.hrms.company_management.utility.DisbursalFrequency;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +50,8 @@ public class LeavePolicyService {
 
     public LeaveTypeResponse create(CreateLeaveTypeRequest leaveType, String policyId) {
         log.info("Creating leave type: {}", leaveType);
-        Policy policyById = policyService.getPolicyEntityById(UUID.fromString(policyId));
+        Policy policyById = policyService.getDraftPolicyEntityById(UUID.fromString(policyId));
+        requireUniqueName(policyById.getId(), leaveType.getName().trim(), null);
         LeaveType save = repository.save(convertToEntity(leaveType,policyById));
         return convertToResponseDto(save);
     }
@@ -68,7 +71,7 @@ public class LeavePolicyService {
     private LeaveType convertToEntity(CreateLeaveTypeRequest leaveTypeRequest, Policy policyId) {
         LeaveType leaveType = new LeaveType();
         leaveType.setId(UUID.randomUUID().toString());
-        leaveType.setName(leaveTypeRequest.getName());
+        leaveType.setName(leaveTypeRequest.getName().trim());
         leaveType.setTotalDays(leaveTypeRequest.getTotalDays());
         leaveType.setCarryForward(leaveTypeRequest.isCarryForward());
         leaveType.setDisbursalFrequency(leaveTypeRequest.getDisbursalFrequency());
@@ -85,8 +88,14 @@ public class LeavePolicyService {
             log.info("Leave type not found with id: {}", id);
             return null;
         }
+        policyService.requireDraft(existing.getPolicy());
+        if (updatedLeaveType.getName() == null || updatedLeaveType.getName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Leave type name is required");
+        }
+        String name = updatedLeaveType.getName().trim();
+        requireUniqueName(existing.getPolicy().getId(), name, id);
 
-        existing.setName(updatedLeaveType.getName());
+        existing.setName(name);
         existing.setTotalDays(updatedLeaveType.getTotalDays());
         existing.setCarryForward(updatedLeaveType.isCarryForward());
         existing.setDisbursalFrequency(updatedLeaveType.getDisbursalFrequency());
@@ -95,10 +104,23 @@ public class LeavePolicyService {
         return repository.save(existing);
     }
 
+    // leave type names must be unique within a policy; excludeId skips the leave type being updated
+    private void requireUniqueName(UUID policyId, String name, String excludeId) {
+        boolean exists = excludeId == null
+                ? repository.existsByPolicy_IdAndNameIgnoreCase(policyId, name)
+                : repository.existsByPolicy_IdAndNameIgnoreCaseAndIdNot(policyId, name, excludeId);
+        if (exists) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Leave type '" + name + "' already exists in policy " + policyId);
+        }
+    }
+
     public boolean delete(String id) {
         log.info("Deleting leave type with id: {}", id);
-        if (!repository.existsById(id)) return false;
-        repository.deleteById(id);
+        LeaveType existing = repository.findById(id).orElse(null);
+        if (existing == null) return false;
+        policyService.requireDraft(existing.getPolicy());
+        repository.delete(existing);
         return true;
     }
 }

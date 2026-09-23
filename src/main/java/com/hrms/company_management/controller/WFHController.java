@@ -10,8 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.hrms.company_management.service.WFHService;
+import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 
 @RestController
@@ -87,11 +89,13 @@ public class WFHController {
     }
 
     @PostMapping("/{policyId}")
-    public ResponseEntity<WfhTypeResponse> create(@RequestBody CreateWfhTypeRequest request, @PathVariable String policyId) {
-        log.info("Received request to create leave type: {}", request);
+    public ResponseEntity<WfhTypeResponse> create(@Valid @RequestBody CreateWfhTypeRequest request, @PathVariable String policyId) {
+        log.info("Received request to create WFH type: {}", request);
         try {
             WfhTypeResponse created = wfhService.create(request,policyId);
             return ResponseEntity.ok(created);
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.ok(null);
