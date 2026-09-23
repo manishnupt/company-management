@@ -3,6 +3,7 @@ package com.hrms.company_management.utility;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.hrms.company_management.dto.WfhTypeResponse;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
@@ -31,5 +32,9 @@ public class WFHMapper {
         return wfhTypes.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
+    }
+
+    public WfhTypeResponse convertToWfhTypeResponse(WFHType saved) {
+        return modelMapper.map(saved, WfhTypeResponse.class);
     }
 }

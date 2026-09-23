@@ -1,14 +1,16 @@
 package com.hrms.company_management.controller;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
+import com.hrms.company_management.dto.*;
+import com.hrms.company_management.entity.Policy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.hrms.company_management.dto.WFHRequest;
-import com.hrms.company_management.dto.WFHResponse;
 import com.hrms.company_management.service.WFHService;
 import lombok.extern.log4j.Log4j2;
 
@@ -81,6 +83,29 @@ public class WFHController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.ok(null);
+        }
+    }
+
+    @PostMapping("/{policyId}")
+    public ResponseEntity<WfhTypeResponse> create(@RequestBody CreateWfhTypeRequest request, @PathVariable String policyId) {
+        log.info("Received request to create leave type: {}", request);
+        try {
+            WfhTypeResponse created = wfhService.create(request,policyId);
+            return ResponseEntity.ok(created);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(null);
+        }
+    }
+
+    @GetMapping("/policies/{policyId}/wfh-types")
+    public ResponseEntity<List<WfhTypeResponse>> getByPolicyId(@PathVariable String policyId) {
+        log.info("Received request to fetch leave types by policy id: {}", policyId);
+        try {
+            return ResponseEntity.ok(wfhService.getWfhTypeByPolicyId(policyId));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(Collections.emptyList());
         }
     }
 

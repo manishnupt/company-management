@@ -3,13 +3,7 @@ package com.hrms.company_management.entity;
 
 import com.hrms.company_management.utility.DisbursalFrequency;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
@@ -24,5 +18,8 @@ public class WFHType {
     private int totalDays;
     @Enumerated(EnumType.STRING)
     private DisbursalFrequency disbursalFrequency;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "policy_id", nullable = false)
+    private Policy policy;
 
 }

@@ -1,6 +1,8 @@
 package com.hrms.company_management.controller;
 
 
+import com.hrms.company_management.dto.CreateLeaveTypeRequest;
+import com.hrms.company_management.dto.LeaveTypeResponse;
 import com.hrms.company_management.entity.LeaveType;
 import com.hrms.company_management.service.LeavePolicyService;
 import lombok.extern.log4j.Log4j2;
@@ -12,7 +14,6 @@ import java.util.Collections;
 import java.util.List;
 
 @RestController
-@RequestMapping("/leave-types")
 @CrossOrigin(origins="*")
 @Log4j2
 public class LeavesPolicyController {
@@ -20,7 +21,7 @@ public class LeavesPolicyController {
     @Autowired
     private LeavePolicyService service;
 
-    @GetMapping
+    @GetMapping("/leave-types")
     public ResponseEntity<List<LeaveType>> getAll() {
         log.info("Received request to fetch all leave types");
         try {
@@ -31,7 +32,7 @@ public class LeavesPolicyController {
         }
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/leave-types/{id}")
     public ResponseEntity<LeaveType> getById(@PathVariable String id) {
         log.info("Received request to fetch leave type by id: {}", id);
         try {
@@ -43,7 +44,7 @@ public class LeavesPolicyController {
         }
     }
 
-    @GetMapping("/schedule/{type}")
+    @GetMapping("/leave-types/schedule/{type}")
     public ResponseEntity<List<LeaveType>> getByType(@PathVariable String type) {
         log.info("Received request to fetch leave types by disbursal type: {}", type);
         try {
@@ -55,13 +56,22 @@ public class LeavesPolicyController {
         }
     }
 
-
-
-    @PostMapping
-    public ResponseEntity<LeaveType> create(@RequestBody LeaveType leaveType) {
-        log.info("Received request to create leave type: {}", leaveType);
+    @GetMapping("/policies/{policyId}/leave-types")
+    public ResponseEntity<List<LeaveTypeResponse>> getByPolicyId(@PathVariable String policyId) {
+        log.info("Received request to fetch leave types by policy id: {}", policyId);
         try {
-            LeaveType created = service.create(leaveType);
+            return ResponseEntity.ok(service.getByPolicyId(policyId));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+    }
+
+    @PostMapping("/leave-types/{policyId}")
+    public ResponseEntity<LeaveTypeResponse> create(@RequestBody CreateLeaveTypeRequest request,@PathVariable String policyId) {
+        log.info("Received request to create leave type: {}", request);
+        try {
+            LeaveTypeResponse created = service.create(request,policyId);
             return ResponseEntity.ok(created);
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,7 +79,7 @@ public class LeavesPolicyController {
         }
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/leave-types/{id}")
     public ResponseEntity<LeaveType> update(@PathVariable String id,
                                             @RequestBody LeaveType leaveType) {
         log.info("Received request to update leave type with id: {}", id);
@@ -82,7 +92,7 @@ public class LeavesPolicyController {
         }
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/leave-types/{id}")
     public ResponseEntity<Boolean> delete(@PathVariable String id) {
         log.info("Received request to delete leave type with id: {}", id);
         try {

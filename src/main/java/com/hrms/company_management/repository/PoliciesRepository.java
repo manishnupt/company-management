@@ -4,10 +4,8 @@ import com.hrms.company_management.entity.Policy;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface PolicyRepo extends JpaRepository<Policy,Long> {
-
-    Optional<Policy> findByPolicyName(String policyName);
+public interface PoliciesRepository extends JpaRepository<Policy, UUID> {
 }

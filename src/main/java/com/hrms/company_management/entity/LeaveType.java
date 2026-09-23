@@ -19,4 +19,8 @@ public class LeaveType {
     private DisbursalFrequency disbursalFrequency;
 
     private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "policy_id", nullable = false)
+    private Policy policy;
 }

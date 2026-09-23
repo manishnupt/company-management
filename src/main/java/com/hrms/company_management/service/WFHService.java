@@ -1,8 +1,12 @@
 package com.hrms.company_management.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.hrms.company_management.dto.CreateWfhTypeRequest;
+import com.hrms.company_management.dto.WfhTypeResponse;
+import com.hrms.company_management.entity.Policy;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +27,9 @@ public class WFHService {
 
     @Autowired
     private WFHMapper wfhMapper;
+
+    @Autowired
+    private PolicyService policyService;
 
     // Add service methods here
     // create
@@ -80,4 +87,29 @@ public class WFHService {
         return wfhMapper.convertToResponseList(repository.findByDisbursalFrequency(disbursalFrequency));
     }
 
+    public WfhTypeResponse create(CreateWfhTypeRequest request, String policyId) {
+        Policy policyById = policyService.getPolicyEntityById(UUID.fromString(policyId));
+
+        log.info("Creating WFH type: {}", request);
+        WFHType wfhType = new WFHType();
+        wfhType.setId(UUID.randomUUID().toString());
+        wfhType.setPolicy(policyById);
+        wfhType.setName(request.getName());
+        wfhType.setTotalDays(request.getTotalDays());
+        wfhType.setDisbursalFrequency(request.getDisbursalFrequency());
+        WFHType saved = repository.save(wfhType);
+        return wfhMapper.convertToWfhTypeResponse(saved);
+    }
+
+    public List<WfhTypeResponse> getWfhTypeByPolicyId(String policyId) {
+        log.info("Fetching WFH types by policy id: {}", policyId);
+        Policy policyById = policyService.getPolicyEntityById(UUID.fromString(policyId));
+        List<WFHType> wfhTypes = repository.findByPolicyId(policyById);
+        List<WfhTypeResponse> wfhTypeResponses = new ArrayList<>();
+        for (WFHType wfhType : wfhTypes) {
+            WfhTypeResponse response = wfhMapper.convertToWfhTypeResponse(wfhType);
+            wfhTypeResponses.add(response);
+        }
+        return wfhTypeResponses;
+    }
 }

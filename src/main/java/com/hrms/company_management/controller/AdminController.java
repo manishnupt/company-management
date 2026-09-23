@@ -127,11 +127,7 @@ public class AdminController {
 
 
 
-    @PostMapping("/company-policy")
-    public ResponseEntity<String> companyPolicy(@RequestBody Map<String, Object> request){
-       log.info("Received request to update company policy");
-       return adminService.companyPolicy(request);
-    }
+
 
     @DeleteMapping("/group/{groupId}/roles/{roleId}")
     public ResponseEntity<String> removeRoleFromGroup(@PathVariable Long groupId, @PathVariable Long roleId) {

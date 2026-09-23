@@ -2,6 +2,7 @@ package com.hrms.company_management.repository;
 
 import java.util.List;
 
+import com.hrms.company_management.entity.Policy;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,4 +17,5 @@ public interface WFHRepository extends JpaRepository<WFHType, String> {
     List<WFHType> findByDisbursalFrequency(@Param("frequency") DisbursalFrequency frequency);
 
 
+    List<WFHType> findByPolicyId(Policy policyById);
 }

@@ -1,12 +1,14 @@
 package com.hrms.company_management.entity;
 
+import com.hrms.company_management.utility.PolicyStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "policies")
@@ -16,13 +18,37 @@ import java.util.List;
 public class Policy {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long policyId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @Column(unique = true, nullable = false)
-    private String policyName; // e.g., "officeRules", "wfhRules"
+    @Column(nullable = false, length = 150)
+    private String name;
 
-    @OneToMany(mappedBy = "policy", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PolicyAttribute> attributes = new ArrayList<>();
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(nullable = false)
+    private Integer version = 1;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PolicyStatus status;
+
+    private LocalDate effectiveFrom;
+
+    private LocalDate effectiveTo;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    private String createdBy;
+
+    private LocalDateTime updatedAt;
+
+    private String updatedBy;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }
-
