@@ -277,19 +277,16 @@ public class AdminService {
 
     }
 
-    public Set<String> getModulesForRoles(RolesRequest rolesRequest) {
-        Set<String> roles =rolesRequest.getRoles();
-        List<Role> allRoles = roleRepo.findAll();
-        log.info("total roles count:{}",allRoles);
-        Set<String> modules = new HashSet<>();
-        for(Role role:allRoles){
-            if(roles.contains(role.getName())) {
-                log.info("role present adding to modules list :{}",role.getModule());
-
-                modules.add(role.getModule());
-            }
+    public Set<String> getModulesForRoles(Set<String> roles) {
+        if (roles == null || roles.isEmpty()) {
+            return new HashSet<>();
         }
-        return  modules;
+        Set<String> modules = new HashSet<>();
+        for (Role role : roleRepo.findByNameIn(roles)) {
+            modules.add(role.getModule());
+        }
+        log.info("Modules resolved for roles {}: {}", roles, modules);
+        return modules;
     }
 
     public Set<String> getRolesByModules(List<String> moduleNames) {

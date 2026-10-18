@@ -3,8 +3,10 @@ package com.hrms.company_management.controller;
 import com.hrms.company_management.dto.*;
 import com.hrms.company_management.entity.RoleGroup;
 import com.hrms.company_management.service.AdminService;
+import com.hrms.company_management.utility.JwtRoleExtractor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +25,9 @@ public class AdminController {
 
     @Autowired
     AdminService adminService;
+
+    @Autowired
+    JwtRoleExtractor jwtRoleExtractor;
 
     @GetMapping("/role")
     public List<GroupRolesResponse> getRoles(){
@@ -76,12 +81,10 @@ public class AdminController {
         return ResponseEntity.ok(updatedGroup);
     }
     @PostMapping("/modules")
-    public ResponseEntity<Set<String>> getModulesForRoles(@RequestBody RolesRequest rolesRequest) {
-
-        log.info("Received request to fetch modules for roles: {}", rolesRequest.getRoles());
-        Set<String> modules= adminService.getModulesForRoles(rolesRequest);
-
-        return ResponseEntity.ok(modules);
+    public ResponseEntity<Set<String>> getModulesForRoles(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
+        Set<String> roles = jwtRoleExtractor.extractRealmRoles(authorization);
+        log.info("Received request to fetch modules for token roles: {}", roles);
+        return ResponseEntity.ok(adminService.getModulesForRoles(roles));
     }
     @PostMapping("/modules/roles")
     public ResponseEntity<Set<String>> getRolesByModules(@RequestBody ModulesRequest request) {
