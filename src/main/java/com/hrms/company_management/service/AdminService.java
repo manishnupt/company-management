@@ -95,7 +95,7 @@ public class AdminService {
         String keycloakGroupId = handleKeycloakGroupCreation(groupName, TenantContext.getCurrentTenant());
         roleGroup.setKcGroupIdRef(keycloakGroupId);
         RoleGroup savedGroup = roleGroupRepo.save(roleGroup);
-        groupCacheService.evict(TenantContext.getCurrentTenant(), null);
+        groupCacheService.evict(TenantContext.getCurrentTenant());
         if (savedGroup.getId() != null) {
             return "Group saved success";
         }
@@ -184,21 +184,19 @@ public class AdminService {
     }
 
     public List<GroupResponse> getAllGroups() {
-        return groupCacheService.getAllGroups(TenantContext.getCurrentTenant(), this::loadAllGroupsFromDb);
-    }
-
-    private List<GroupResponse> loadAllGroupsFromDb() {
-        List<RoleGroup> allGroupRoles = roleGroupRepo.findAll();
         List<GroupResponse> groupResponses = new ArrayList<>();
-        for (RoleGroup roleGroup : allGroupRoles) {
+        for (RoleGroup roleGroup : getCachedGroups()) {
             GroupResponse response = new GroupResponse();
             response.setGroupId(roleGroup.getId());
             response.setGroupName(roleGroup.getName());
-            // response.setRoles(roleGroup.getRoles());
             response.setGroupDescription(roleGroup.getDescription());
             groupResponses.add(response);
         }
         return groupResponses;
+    }
+
+    private List<RoleGroup> getCachedGroups() {
+        return groupCacheService.getAllGroups(TenantContext.getCurrentTenant(), roleGroupRepo::findAllWithRoles);
     }
 
     public RoleGroup assignRoles(Long groupId, List<String> roleNames) {
@@ -214,7 +212,7 @@ public class AdminService {
 
         group.getRoles().addAll(roles);
         RoleGroup savedGroup = roleGroupRepo.save(group);
-        groupCacheService.evict(TenantContext.getCurrentTenant(), groupId);
+        groupCacheService.evict(TenantContext.getCurrentTenant());
         return savedGroup;
     }
 
@@ -276,11 +274,11 @@ public class AdminService {
         return groupRolesResponses;
     }
 
-    // Transactional so the lazy roles set can be loaded while the group is written to the cache
-    @Transactional
     public RoleGroup getGroupById(Long groupId) {
-        return groupCacheService.getGroupById(TenantContext.getCurrentTenant(), groupId,
-                () -> roleGroupRepo.findById(groupId).get());
+        return getCachedGroups().stream()
+                .filter(group -> groupId.equals(group.getId()))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Group not found with id: " + groupId));
     }
 
     public Set<String> getModulesForRoles(Set<String> roles) {
@@ -490,7 +488,7 @@ public class AdminService {
 
         group.getRoles().remove(role);
         roleGroupRepo.save(group);
-        groupCacheService.evict(TenantContext.getCurrentTenant(), groupId);
+        groupCacheService.evict(TenantContext.getCurrentTenant());
         return "Role removed from group successfully";
     }
 
@@ -504,7 +502,7 @@ public class AdminService {
         handleKeycloakGroupUpdate(group.getKcGroupIdRef(),groupName,TenantContext.getCurrentTenant());
 
         RoleGroup savedGroup = roleGroupRepo.save(group);
-        groupCacheService.evict(TenantContext.getCurrentTenant(), groupId);
+        groupCacheService.evict(TenantContext.getCurrentTenant());
         return savedGroup;
     }
 

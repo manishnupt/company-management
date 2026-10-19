@@ -2,7 +2,6 @@ package com.hrms.company_management.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hrms.company_management.dto.GroupResponse;
 import com.hrms.company_management.entity.RoleGroup;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +16,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * Tenant-scoped Redis cache for role groups.
+ * Tenant-scoped Redis cache for role groups. One key per tenant holds every group with its roles.
  * Every Redis failure is logged and falls back to the database, so Redis is never required for correctness.
  */
 @Service
@@ -25,7 +24,7 @@ import java.util.function.Supplier;
 public class GroupCacheService {
 
     private static final String KEY_PREFIX = "company-mgmt:groups:";
-    private static final TypeReference<List<GroupResponse>> GROUP_LIST_TYPE = new TypeReference<>() {};
+    private static final TypeReference<List<RoleGroup>> GROUP_LIST_TYPE = new TypeReference<>() {};
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
@@ -42,29 +41,21 @@ public class GroupCacheService {
         this.ttl = Duration.ofHours(ttlHours);
     }
 
-    public List<GroupResponse> getAllGroups(String tenant, Supplier<List<GroupResponse>> loader) {
+    public List<RoleGroup> getAllGroups(String tenant, Supplier<List<RoleGroup>> loader) {
         return getOrLoad(tenant, allGroupsKey(tenant), GROUP_LIST_TYPE, loader);
     }
 
-    public RoleGroup getGroupById(String tenant, Long groupId, Supplier<RoleGroup> loader) {
-        return getOrLoad(tenant, groupKey(tenant, groupId), new TypeReference<RoleGroup>() {}, loader);
-    }
-
-    /** Clears the "all groups" list and, if given, the single group entry. Runs after commit when inside a transaction. */
-    public void evict(String tenant, Long groupId) {
+    /** Clears the tenant's group list. Runs after commit when inside a transaction. */
+    public void evict(String tenant) {
         if (!isUsable(tenant)) {
             return;
         }
         Runnable eviction = () -> {
             try {
-                if (groupId != null) {
-                    redisTemplate.delete(List.of(allGroupsKey(tenant), groupKey(tenant, groupId)));
-                } else {
-                    redisTemplate.delete(allGroupsKey(tenant));
-                }
-                log.info("Evicted group cache for tenant:{} groupId:{}", tenant, groupId);
+                redisTemplate.delete(allGroupsKey(tenant));
+                log.info("Evicted group cache for tenant:{}", tenant);
             } catch (Exception e) {
-                log.warn("Failed to evict group cache for tenant:{} groupId:{}: {}", tenant, groupId, e.getMessage());
+                log.warn("Failed to evict group cache for tenant:{}: {}", tenant, e.getMessage());
             }
         };
 
@@ -124,9 +115,5 @@ public class GroupCacheService {
 
     private static String allGroupsKey(String tenant) {
         return KEY_PREFIX + tenant + ":all";
-    }
-
-    private static String groupKey(String tenant, Long groupId) {
-        return KEY_PREFIX + tenant + ":" + groupId;
     }
 }
