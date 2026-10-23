@@ -14,11 +14,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.hrms.company_management.controller.NoticeAdminController;
 import com.hrms.company_management.controller.NoticeController;
 
 /** Error bodies for the notice endpoints only, so other controllers keep their current behaviour. */
-@RestControllerAdvice(assignableTypes = {NoticeAdminController.class, NoticeController.class})
+@RestControllerAdvice(assignableTypes = NoticeController.class)
 public class NoticeExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

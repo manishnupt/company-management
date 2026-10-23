@@ -93,7 +93,7 @@ public class AdminController {
         return ResponseEntity.ok(roles);
     }
 
-    // Notice endpoints (/admin/notice) live in NoticeAdminController.
+    // Notice endpoints (/admin/notice) live in NoticeController.
 
     @PostMapping("/holiday")
     public ResponseEntity<String> addHoliday(@RequestBody HolidayRequest holidayRequest) {

@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hrms.company_management.config.ModelMapperConfig;
 import com.hrms.company_management.config.NoticeConfig;
-import com.hrms.company_management.controller.NoticeAdminController;
 import com.hrms.company_management.controller.NoticeController;
 import com.hrms.company_management.repository.NoticeRepo;
 import com.hrms.company_management.service.NoticeService;
@@ -36,7 +35,7 @@ import com.hrms.company_management.utility.TenantRegistry;
  * HTTP -> controller -> service -> JPA -> H2.
  * The full application context is not used because MultiTenantConfiguration fetches tenant DBs over HTTP at startup.
  */
-@WebMvcTest(controllers = {NoticeAdminController.class, NoticeController.class})
+@WebMvcTest(controllers = NoticeController.class)
 @AutoConfigureDataJpa
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({NoticeService.class, NoticeMapper.class, TenantRegistry.class,
