@@ -6,7 +6,6 @@ import com.hrms.company_management.repository.*;
 import com.hrms.company_management.utility.CompanyManagementHelper;
 import com.hrms.company_management.utility.Constants;
 import com.hrms.company_management.utility.HolidayMapper;
-import com.hrms.company_management.utility.NoticeMapper;
 import com.hrms.company_management.utility.TenantContext;
 import com.hrms.company_management.utility.PolicyHelper;
 import jakarta.transaction.Transactional;
@@ -42,13 +41,7 @@ public class AdminService {
     private RestTemplate restTemplate;
 
     @Autowired
-    NoticeRepo noticeRepository;
-
-    @Autowired
     HolidayRepo holidayRepository;
-
-    @Autowired
-    NoticeMapper noticeMapper;
 
     @Autowired
     HolidayMapper holidayMapper;
@@ -316,29 +309,6 @@ public class AdminService {
             log.error("{} - Status: {}, Response: {}", errorMessage, e.getStatusCode(), e.getResponseBodyAsString(), e);
             throw new RuntimeException(errorMessage + " - Status: " + e.getStatusCode(), e);
         }
-    }
-
-    // Notice Management
-    public String publishNotice(NoticeRequest noticeRequest) {
-
-        Notice notice = noticeMapper.convertToEntity(noticeRequest);
-        Notice savedNotice = noticeRepository.save(notice);
-        if (savedNotice.getId() != null) {
-            return "Notice published successfully";
-        } else {
-            return "Failed to publish notice";
-        }
-    }
-
-    public List<NoticeResponse> getAllNotices() {
-
-        List<Notice> notices = noticeRepository.findAll();
-        if (notices.isEmpty()) {
-           return new ArrayList<>();
-        }
-        List<NoticeResponse> noticeResponses = noticeMapper.convertToResponseList(notices);
-        return noticeResponses;
-
     }
 
     public String addHoliday(HolidayRequest holidayRequest) {

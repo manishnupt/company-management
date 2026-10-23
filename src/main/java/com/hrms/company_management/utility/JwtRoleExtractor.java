@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Reads Keycloak realm roles (realm_access.roles) from a bearer token.
+ * Reads claims (realm roles, subject, ...) from a Keycloak bearer token.
  * The signature is NOT checked here: Kong validates the token before the request reaches this service.
  */
 @Component
@@ -25,6 +25,17 @@ public class JwtRoleExtractor {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Set<String> extractRealmRoles(String authorizationHeader) {
+        return realmRoles(extractClaims(authorizationHeader));
+    }
+
+    public Set<String> realmRoles(JsonNode claims) {
+        Set<String> result = new HashSet<>();
+        claims.path("realm_access").path("roles").forEach(role -> result.add(role.asText()));
+        return result;
+    }
+
+    /** Decoded token payload. Throws 401 if the header is missing or the token is malformed. */
+    public JsonNode extractClaims(String authorizationHeader) {
         if (authorizationHeader == null || !authorizationHeader.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing bearer token");
         }
@@ -36,14 +47,13 @@ public class JwtRoleExtractor {
 
         try {
             byte[] payload = Base64.getUrlDecoder().decode(parts[1]);
-            JsonNode roles = objectMapper.readTree(new String(payload, StandardCharsets.UTF_8))
-                    .path("realm_access").path("roles");
-
-            Set<String> result = new HashSet<>();
-            roles.forEach(role -> result.add(role.asText()));
-            return result;
+            JsonNode claims = objectMapper.readTree(new String(payload, StandardCharsets.UTF_8));
+            if (claims == null || !claims.isObject()) {
+                throw new IllegalArgumentException("Token payload is not a JSON object");
+            }
+            return claims;
         } catch (Exception ex) {
-            log.error("Unable to read roles from token", ex);
+            log.error("Unable to read claims from token", ex);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Malformed token");
         }
     }

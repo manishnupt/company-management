@@ -93,17 +93,7 @@ public class AdminController {
         return ResponseEntity.ok(roles);
     }
 
-    @PostMapping("/notice")
-    public ResponseEntity<String> publishNotice(@RequestBody NoticeRequest noticeRequest) {
-       log.info("Received request to publish notice");
-       return ResponseEntity.ok(adminService.publishNotice(noticeRequest));
-    }
-
-    @GetMapping("/notice")
-    public ResponseEntity<List<NoticeResponse>> getAllNotices() {
-        log.info("Received request to fetch all notices");
-        return ResponseEntity.ok(adminService.getAllNotices());
-    }
+    // Notice endpoints (/admin/notice) live in NoticeAdminController.
 
     @PostMapping("/holiday")
     public ResponseEntity<String> addHoliday(@RequestBody HolidayRequest holidayRequest) {
