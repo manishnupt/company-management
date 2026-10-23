@@ -1,5 +1,6 @@
 package com.hrms.company_management.utility;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,22 +18,26 @@ public class NoticeMapper {
 
     public NoticeMapper(ModelMapper modelMapper) {
         this.modelMapper = modelMapper;
-
     }
 
-    public Notice convertToEntity(NoticeRequest noticeRequest) {
-
-        return modelMapper.map(noticeRequest, Notice.class);
+    /** Copies the editable fields from the request. Lifecycle fields (status, audit) are set by the service. */
+    public void applyRequest(NoticeRequest request, Notice notice) {
+        notice.setTitle(request.getTitle().trim());
+        notice.setDescription(request.getDescription().trim());
+        notice.setNoticeType(request.getNoticeType().trim());
+        notice.setPublishAt(request.getPublishAt());
+        notice.setExpiresAt(request.getExpiresAt());
     }
 
-    public NoticeResponse convertToResponse(Notice notice) {
-
-        return modelMapper.map(notice, NoticeResponse.class);
+    public NoticeResponse convertToResponse(Notice notice, Instant now) {
+        NoticeResponse response = modelMapper.map(notice, NoticeResponse.class);
+        response.setStatus(NoticeLifecycle.effectiveStatus(notice, now));
+        return response;
     }
 
-    public List<NoticeResponse> convertToResponseList(List<Notice> notices) {
+    public List<NoticeResponse> convertToResponseList(List<Notice> notices, Instant now) {
         return notices.stream()
-                .map(this::convertToResponse)
+                .map(notice -> convertToResponse(notice, now))
                 .collect(Collectors.toList());
     }
 }

@@ -19,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Configuration
 @Log4j2
@@ -29,6 +30,13 @@ public class MultiTenantConfiguration {
 
     @Value("${tenant.config.api.url}")
     private String tenantConfigApiUrl;
+
+    /** Tenants that got a DataSource at startup. Background jobs iterate over these. */
+    private volatile Set<String> tenantIds = Set.of();
+
+    public Set<String> getTenantIds() {
+        return tenantIds;
+    }
 
     @Bean
     @ConfigurationProperties(prefix = "tenants")
@@ -45,6 +53,10 @@ public class MultiTenantConfiguration {
 
             resolvedDataSources.put(config.getTenantId(), dataSourceBuilder.build());
         }
+
+        tenantIds = resolvedDataSources.keySet().stream()
+                .map(String::valueOf)
+                .collect(Collectors.toUnmodifiableSet());
 
         AbstractRoutingDataSource dataSource = new MultitenantDataSource();
         dataSource.setDefaultTargetDataSource(resolvedDataSources.get(defaultTenant));
