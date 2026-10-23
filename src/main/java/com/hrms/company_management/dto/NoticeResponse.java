@@ -22,8 +22,6 @@ public class NoticeResponse {
     private Instant publishAt;
     private Instant expiresAt;
 
-    private String createdBy;
-    private String updatedBy;
     private LocalDate createdAt;
     private LocalDate updatedAt;
 }

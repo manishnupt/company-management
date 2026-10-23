@@ -9,9 +9,8 @@ import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 import org.springframework.stereotype.Component;
 
 /**
- * Knows which tenants have a configured database.
- * Needed because the routing DataSource silently falls back to the default tenant for an unknown key,
- * and because background jobs have no X-Tenant-Id header and must visit every tenant themselves.
+ * Lists the tenants that have a configured database.
+ * Background jobs have no X-Tenant-Id header, so they use this to visit every tenant themselves.
  */
 @Component
 public class TenantRegistry {
@@ -34,9 +33,5 @@ public class TenantRegistry {
                     .collect(Collectors.toUnmodifiableSet());
         }
         return Set.of();
-    }
-
-    public boolean isKnownTenant(String tenantId) {
-        return !isRoutingEnabled() || tenantIds().contains(tenantId);
     }
 }

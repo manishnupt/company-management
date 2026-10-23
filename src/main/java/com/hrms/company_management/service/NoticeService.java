@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.hrms.company_management.dto.NoticeCaller;
 import com.hrms.company_management.dto.NoticeRequest;
 import com.hrms.company_management.dto.NoticeResponse;
 import com.hrms.company_management.entity.Notice;
@@ -48,7 +47,7 @@ public class NoticeService {
     // ---------- Admin ----------
 
     @Transactional
-    public NoticeResponse createNotice(NoticeRequest request, NoticeCaller caller) {
+    public NoticeResponse createNotice(NoticeRequest request) {
         Instant now = clock.instant();
         validateDates(request.getPublishAt(), request.getExpiresAt(), now);
 
@@ -59,11 +58,9 @@ public class NoticeService {
         } else {
             markPublished(notice, now);
         }
-        notice.setCreatedBy(caller.userId());
-        notice.setUpdatedBy(caller.userId());
 
         Notice saved = noticeRepo.save(notice);
-        log.info("Notice {} created as {} by {}", saved.getId(), saved.getStatus(), caller.userId());
+        log.info("Notice {} created as {}", saved.getId(), saved.getStatus());
         return noticeMapper.convertToResponse(saved, now);
     }
 
@@ -81,7 +78,7 @@ public class NoticeService {
     }
 
     @Transactional
-    public NoticeResponse updateNotice(Long id, NoticeRequest request, NoticeCaller caller) {
+    public NoticeResponse updateNotice(Long id, NoticeRequest request) {
         Instant now = clock.instant();
         Notice notice = findOrThrow(id);
         NoticeStatus current = NoticeLifecycle.effectiveStatus(notice, now);
@@ -95,13 +92,12 @@ public class NoticeService {
             // Re-evaluate: moving publishAt to now/past publishes it.
             markPublished(notice, now);
         }
-        notice.setUpdatedBy(caller.userId());
         return noticeMapper.convertToResponse(noticeRepo.save(notice), now);
     }
 
     /** DRAFT -> SCHEDULED/PUBLISHED depending on publishAt; SCHEDULED -> PUBLISHED immediately. */
     @Transactional
-    public NoticeResponse publishNotice(Long id, NoticeCaller caller) {
+    public NoticeResponse publishNotice(Long id) {
         Instant now = clock.instant();
         Notice notice = findOrThrow(id);
         NoticeStatus current = NoticeLifecycle.effectiveStatus(notice, now);
@@ -113,33 +109,31 @@ public class NoticeService {
         // A draft may have been saved long ago; its expiry may have passed since.
         validateDates(notice.getPublishAt(), notice.getExpiresAt(), now);
         markPublished(notice, now);
-        notice.setUpdatedBy(caller.userId());
-        log.info("Notice {} moved to {} by {}", id, notice.getStatus(), caller.userId());
+        log.info("Notice {} moved to {}", id, notice.getStatus());
         return noticeMapper.convertToResponse(noticeRepo.save(notice), now);
     }
 
     @Transactional
-    public NoticeResponse archiveNotice(Long id, NoticeCaller caller) {
+    public NoticeResponse archiveNotice(Long id) {
         Instant now = clock.instant();
         Notice notice = findOrThrow(id);
         if (notice.getStatus() == NoticeStatus.ARCHIVED) {
             throw conflict("Notice is already archived");
         }
         notice.setStatus(NoticeStatus.ARCHIVED);
-        notice.setUpdatedBy(caller.userId());
-        log.info("Notice {} archived by {}", id, caller.userId());
+        log.info("Notice {} archived", id);
         return noticeMapper.convertToResponse(noticeRepo.save(notice), now);
     }
 
     /** Hard delete is allowed for drafts only; anything employees may have seen must be archived instead. */
     @Transactional
-    public void deleteNotice(Long id, NoticeCaller caller) {
+    public void deleteNotice(Long id) {
         Notice notice = findOrThrow(id);
         if (notice.getStatus() != NoticeStatus.DRAFT) {
             throw conflict("Only DRAFT notices can be deleted; archive it instead");
         }
         noticeRepo.delete(notice);
-        log.info("Draft notice {} deleted by {}", id, caller.userId());
+        log.info("Draft notice {} deleted", id);
     }
 
     // ---------- Employee ----------
@@ -148,14 +142,14 @@ public class NoticeService {
     public List<NoticeResponse> getVisibleNotices() {
         Instant now = clock.instant();
         return noticeRepo.findVisible(NoticeLifecycle.LIVE_STATUSES, now).stream()
-                .map(notice -> toEmployeeResponse(notice, now))
+                .map(notice -> noticeMapper.convertToResponse(notice, now))
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public NoticeResponse getVisibleNotice(Long id) {
         Instant now = clock.instant();
-        return toEmployeeResponse(findVisibleOrThrow(id, now), now);
+        return noticeMapper.convertToResponse(findVisibleOrThrow(id, now), now);
     }
 
     // ---------- Scheduler ----------
@@ -171,14 +165,6 @@ public class NoticeService {
     }
 
     // ---------- Helpers ----------
-
-    private NoticeResponse toEmployeeResponse(Notice notice, Instant now) {
-        NoticeResponse response = noticeMapper.convertToResponse(notice, now);
-        // Audit fields are for admins only.
-        response.setCreatedBy(null);
-        response.setUpdatedBy(null);
-        return response;
-    }
 
     /** Sets SCHEDULED or PUBLISHED from publishAt; a missing or past publishAt becomes now. */
     private static void markPublished(Notice notice, Instant now) {

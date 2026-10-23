@@ -14,7 +14,6 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +24,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.hrms.company_management.dto.NoticeCaller;
 import com.hrms.company_management.dto.NoticeRequest;
 import com.hrms.company_management.dto.NoticeResponse;
 import com.hrms.company_management.entity.Notice;
@@ -38,7 +36,6 @@ import com.hrms.company_management.utility.NoticeMapper;
 class NoticeServiceTest {
 
     private static final Instant NOW = Instant.parse("2026-10-24T10:00:00Z");
-    private static final NoticeCaller ADMIN = new NoticeCaller("admin-1", "tomato", Set.of("admin"));
 
     @Mock
     private NoticeRepo noticeRepo;
@@ -90,12 +87,11 @@ class NoticeServiceTest {
     @Test
     void createWithoutPublishAtPublishesNow() {
         saveReturnsArgument();
-        NoticeResponse response = service.createNotice(request(), ADMIN);
+        NoticeResponse response = service.createNotice(request());
 
         assertThat(response.getStatus()).isEqualTo(NoticeStatus.PUBLISHED);
         assertThat(response.getPublishAt()).isEqualTo(NOW);
         assertThat(response.getTitle()).isEqualTo("Office closed");
-        assertThat(response.getCreatedBy()).isEqualTo("admin-1");
     }
 
     @Test
@@ -104,7 +100,7 @@ class NoticeServiceTest {
         NoticeRequest request = request();
         request.setPublishAt(NOW.plusSeconds(3600));
 
-        assertThat(service.createNotice(request, ADMIN).getStatus()).isEqualTo(NoticeStatus.SCHEDULED);
+        assertThat(service.createNotice(request).getStatus()).isEqualTo(NoticeStatus.SCHEDULED);
     }
 
     @Test
@@ -113,7 +109,7 @@ class NoticeServiceTest {
         NoticeRequest request = request();
         request.setSaveAsDraft(true);
 
-        assertThat(service.createNotice(request, ADMIN).getStatus()).isEqualTo(NoticeStatus.DRAFT);
+        assertThat(service.createNotice(request).getStatus()).isEqualTo(NoticeStatus.DRAFT);
     }
 
     @Test
@@ -121,11 +117,11 @@ class NoticeServiceTest {
         NoticeRequest beforePublish = request();
         beforePublish.setPublishAt(NOW.plusSeconds(100));
         beforePublish.setExpiresAt(NOW.plusSeconds(50));
-        assertStatus(() -> service.createNotice(beforePublish, ADMIN), HttpStatus.BAD_REQUEST);
+        assertStatus(() -> service.createNotice(beforePublish), HttpStatus.BAD_REQUEST);
 
         NoticeRequest past = request();
         past.setExpiresAt(NOW.minusSeconds(1));
-        assertStatus(() -> service.createNotice(past, ADMIN), HttpStatus.BAD_REQUEST);
+        assertStatus(() -> service.createNotice(past), HttpStatus.BAD_REQUEST);
         verify(noticeRepo, never()).save(any());
     }
 
@@ -135,7 +131,7 @@ class NoticeServiceTest {
         when(noticeRepo.findById(5L)).thenReturn(Optional.of(draft));
         saveReturnsArgument();
 
-        assertThat(service.publishNotice(5L, ADMIN).getStatus()).isEqualTo(NoticeStatus.SCHEDULED);
+        assertThat(service.publishNotice(5L).getStatus()).isEqualTo(NoticeStatus.SCHEDULED);
     }
 
     @Test
@@ -144,7 +140,7 @@ class NoticeServiceTest {
         when(noticeRepo.findById(5L)).thenReturn(Optional.of(scheduled));
         saveReturnsArgument();
 
-        NoticeResponse response = service.publishNotice(5L, ADMIN);
+        NoticeResponse response = service.publishNotice(5L);
         assertThat(response.getStatus()).isEqualTo(NoticeStatus.PUBLISHED);
         assertThat(response.getPublishAt()).isEqualTo(NOW);
     }
@@ -154,7 +150,7 @@ class NoticeServiceTest {
         Notice draft = stored(5L, NoticeStatus.DRAFT, null, NOW.minusSeconds(1));
         when(noticeRepo.findById(5L)).thenReturn(Optional.of(draft));
 
-        assertStatus(() -> service.publishNotice(5L, ADMIN), HttpStatus.BAD_REQUEST);
+        assertStatus(() -> service.publishNotice(5L), HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -162,9 +158,9 @@ class NoticeServiceTest {
         Notice published = stored(5L, NoticeStatus.PUBLISHED, NOW.minusSeconds(60), null);
         when(noticeRepo.findById(5L)).thenReturn(Optional.of(published));
 
-        assertStatus(() -> service.updateNotice(5L, request(), ADMIN), HttpStatus.CONFLICT);
-        assertStatus(() -> service.publishNotice(5L, ADMIN), HttpStatus.CONFLICT);
-        assertStatus(() -> service.deleteNotice(5L, ADMIN), HttpStatus.CONFLICT);
+        assertStatus(() -> service.updateNotice(5L, request()), HttpStatus.CONFLICT);
+        assertStatus(() -> service.publishNotice(5L), HttpStatus.CONFLICT);
+        assertStatus(() -> service.deleteNotice(5L), HttpStatus.CONFLICT);
     }
 
     @Test
@@ -173,9 +169,8 @@ class NoticeServiceTest {
         when(noticeRepo.findById(5L)).thenReturn(Optional.of(scheduled));
         saveReturnsArgument();
 
-        NoticeResponse response = service.updateNotice(5L, request(), ADMIN);
+        NoticeResponse response = service.updateNotice(5L, request());
         assertThat(response.getStatus()).isEqualTo(NoticeStatus.PUBLISHED);
-        assertThat(response.getUpdatedBy()).isEqualTo("admin-1");
     }
 
     @Test
@@ -184,8 +179,8 @@ class NoticeServiceTest {
         when(noticeRepo.findById(5L)).thenReturn(Optional.of(notice));
         saveReturnsArgument();
 
-        assertThat(service.archiveNotice(5L, ADMIN).getStatus()).isEqualTo(NoticeStatus.ARCHIVED);
-        assertStatus(() -> service.archiveNotice(5L, ADMIN), HttpStatus.CONFLICT);
+        assertThat(service.archiveNotice(5L).getStatus()).isEqualTo(NoticeStatus.ARCHIVED);
+        assertStatus(() -> service.archiveNotice(5L), HttpStatus.CONFLICT);
     }
 
     @Test
@@ -193,7 +188,7 @@ class NoticeServiceTest {
         Notice draft = stored(5L, NoticeStatus.DRAFT, null, null);
         when(noticeRepo.findById(5L)).thenReturn(Optional.of(draft));
 
-        service.deleteNotice(5L, ADMIN);
+        service.deleteNotice(5L);
         verify(noticeRepo).delete(draft);
     }
 
@@ -216,14 +211,11 @@ class NoticeServiceTest {
     }
 
     @Test
-    void employeeListHidesAuditFields() {
-        Notice a = stored(1L, NoticeStatus.PUBLISHED, NOW.minusSeconds(60), null);
-        a.setCreatedBy("admin-1");
-        when(noticeRepo.findVisible(anyCollection(), eq(NOW))).thenReturn(List.of(a));
+    void employeeListReturnsVisibleNotices() {
+        when(noticeRepo.findVisible(anyCollection(), eq(NOW)))
+                .thenReturn(List.of(stored(1L, NoticeStatus.PUBLISHED, NOW.minusSeconds(60), null)));
 
-        List<NoticeResponse> result = service.getVisibleNotices();
-        assertThat(result).extracting(NoticeResponse::getId).containsExactly(1L);
-        assertThat(result.get(0).getCreatedBy()).isNull();
+        assertThat(service.getVisibleNotices()).extracting(NoticeResponse::getId).containsExactly(1L);
     }
 
     @Test

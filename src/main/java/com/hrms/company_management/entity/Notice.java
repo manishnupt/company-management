@@ -41,10 +41,6 @@ public class Notice {
     private Instant expiresAt;
 
     @Column(updatable = false)
-    private String createdBy;
-    private String updatedBy;
-
-    @Column(updatable = false)
     private LocalDate createdAt;
     private LocalDate updatedAt;
 
