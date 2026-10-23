@@ -24,7 +24,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hrms.company_management.config.ModelMapperConfig;
-import com.hrms.company_management.config.NoticeConfig;
 import com.hrms.company_management.controller.NoticeController;
 import com.hrms.company_management.repository.NoticeRepo;
 import com.hrms.company_management.service.NoticeService;
@@ -38,7 +37,7 @@ import com.hrms.company_management.utility.NoticeMapper;
 @AutoConfigureDataJpa
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({NoticeService.class, NoticeMapper.class,
-        ModelMapperConfig.class, NoticeConfig.class})
+        ModelMapperConfig.class})
 @ActiveProfiles("test")
 class NoticeApiIntegrationTest {
 

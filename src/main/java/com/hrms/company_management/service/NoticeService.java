@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,12 @@ public class NoticeService {
     private final NoticeMapper noticeMapper;
     private final Clock clock;
 
+    @Autowired
+    public NoticeService(NoticeRepo noticeRepo, NoticeMapper noticeMapper) {
+        this(noticeRepo, noticeMapper, Clock.systemUTC());
+    }
+
+    /** Lets tests use a fixed time. */
     public NoticeService(NoticeRepo noticeRepo,
                          NoticeMapper noticeMapper,
                          Clock clock) {
