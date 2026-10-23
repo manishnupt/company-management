@@ -3,6 +3,7 @@ package com.hrms.company_management.service;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -158,7 +159,8 @@ public class NoticeService {
     @Transactional
     public TransitionResult applyScheduledTransitions() {
         Instant now = clock.instant();
-        LocalDate today = LocalDate.now(clock);
+        // Same zone as Notice.@PreUpdate, so updatedAt is consistent however the row was changed.
+        LocalDate today = LocalDate.now(clock.withZone(ZoneId.systemDefault()));
         int published = noticeRepo.publishDue(NoticeStatus.SCHEDULED, NoticeStatus.PUBLISHED, now, today);
         int expired = noticeRepo.expireDue(NoticeLifecycle.LIVE_STATUSES, NoticeStatus.EXPIRED, now, today);
         return new TransitionResult(published, expired);

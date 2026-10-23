@@ -29,7 +29,6 @@ import com.hrms.company_management.controller.NoticeController;
 import com.hrms.company_management.repository.NoticeRepo;
 import com.hrms.company_management.service.NoticeService;
 import com.hrms.company_management.utility.NoticeMapper;
-import com.hrms.company_management.utility.TenantRegistry;
 
 /**
  * HTTP -> controller -> service -> JPA -> H2.
@@ -38,7 +37,7 @@ import com.hrms.company_management.utility.TenantRegistry;
 @WebMvcTest(controllers = NoticeController.class)
 @AutoConfigureDataJpa
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({NoticeService.class, NoticeMapper.class, TenantRegistry.class,
+@Import({NoticeService.class, NoticeMapper.class,
         ModelMapperConfig.class, NoticeConfig.class})
 @ActiveProfiles("test")
 class NoticeApiIntegrationTest {

@@ -4,15 +4,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.hrms.company_management.config.MultiTenantConfiguration;
 import com.hrms.company_management.utility.TenantContext;
-import com.hrms.company_management.utility.TenantRegistry;
 
 import lombok.extern.log4j.Log4j2;
 
 /**
- * Periodically stores SCHEDULED -> PUBLISHED and -> EXPIRED transitions in every tenant database.
- * Optional: visibility is computed from publishAt/expiresAt at read time, so this only keeps stored
- * statuses tidy. The updates are idempotent, so running it on several instances is safe.
+ * Once a day, stores SCHEDULED -> PUBLISHED and -> EXPIRED transitions in every tenant database.
+ * The API already computes the status from publishAt/expiresAt on every read, so this only keeps the
+ * stored status column tidy; it may lag by up to a day. The updates are idempotent, so a missed run is
+ * caught up by the next one and running on several instances is safe.
  */
 @Component
 @ConditionalOnProperty(name = "notices.scheduler.enabled", havingValue = "true", matchIfMissing = true)
@@ -20,21 +21,16 @@ import lombok.extern.log4j.Log4j2;
 public class NoticeLifecycleScheduler {
 
     private final NoticeService noticeService;
-    private final TenantRegistry tenantRegistry;
+    private final MultiTenantConfiguration multiTenantConfiguration;
 
-    public NoticeLifecycleScheduler(NoticeService noticeService, TenantRegistry tenantRegistry) {
+    public NoticeLifecycleScheduler(NoticeService noticeService, MultiTenantConfiguration multiTenantConfiguration) {
         this.noticeService = noticeService;
-        this.tenantRegistry = tenantRegistry;
+        this.multiTenantConfiguration = multiTenantConfiguration;
     }
 
-    @Scheduled(fixedDelayString = "${notices.scheduler.fixed-delay-ms:60000}",
-            initialDelayString = "${notices.scheduler.initial-delay-ms:30000}")
+    @Scheduled(cron = "${notices.scheduler.cron:0 0 1 * * *}", zone = "${notices.scheduler.zone:Asia/Kolkata}")
     public void applyTransitions() {
-        if (!tenantRegistry.isRoutingEnabled()) {
-            applyForTenant(null);
-            return;
-        }
-        for (String tenantId : tenantRegistry.tenantIds()) {
+        for (String tenantId : multiTenantConfiguration.getTenantIds()) {
             applyForTenant(tenantId);
         }
     }
@@ -46,9 +42,7 @@ public class NoticeLifecycleScheduler {
             // Must be set before the transaction opens, because the routing DataSource picks the DB on connect.
             TenantContext.setCurrentTenant(tenantId);
             NoticeService.TransitionResult result = noticeService.applyScheduledTransitions();
-            if (result.published() > 0 || result.expired() > 0) {
-                log.info("Tenant {}: {} notices published, {} expired", tenantId, result.published(), result.expired());
-            }
+            log.info("Tenant {}: {} notices published, {} expired", tenantId, result.published(), result.expired());
         } catch (Exception ex) {
             log.error("Notice lifecycle update failed for tenant {}", tenantId, ex);
         } finally {

@@ -6,25 +6,26 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.scheduling.annotation.Scheduled;
 
+import com.hrms.company_management.config.MultiTenantConfiguration;
 import com.hrms.company_management.service.NoticeLifecycleScheduler;
 import com.hrms.company_management.service.NoticeService;
 import com.hrms.company_management.utility.TenantContext;
-import com.hrms.company_management.utility.TenantRegistry;
 
 class NoticeLifecycleSchedulerTest {
 
     @Test
-    void runsForEveryTenantWithItsContextAndSurvivesFailures() {
+    void runsForEveryConfiguredTenantWithItsContextAndSurvivesFailures() {
         NoticeService service = mock(NoticeService.class);
-        TenantRegistry registry = mock(TenantRegistry.class);
-        when(registry.isRoutingEnabled()).thenReturn(true);
-        when(registry.tenantIds()).thenReturn(new LinkedHashSet<>(List.of("broken", "tomato")));
+        MultiTenantConfiguration tenants = mock(MultiTenantConfiguration.class);
+        when(tenants.getTenantIds()).thenReturn(new LinkedHashSet<>(List.of("broken", "tomato")));
 
         List<String> seenTenants = new ArrayList<>();
         when(service.applyScheduledTransitions()).thenAnswer(inv -> {
@@ -36,7 +37,7 @@ class NoticeLifecycleSchedulerTest {
             return new NoticeService.TransitionResult(1, 0);
         });
 
-        new NoticeLifecycleScheduler(service, registry).applyTransitions();
+        new NoticeLifecycleScheduler(service, tenants).applyTransitions();
 
         assertThat(seenTenants).containsExactly("broken", "tomato");
         assertThat(TenantContext.getCurrentTenant()).isNull();
@@ -44,13 +45,20 @@ class NoticeLifecycleSchedulerTest {
     }
 
     @Test
-    void runsOnceWithoutRouting() {
+    void noTenantsMeansNoWork() {
         NoticeService service = mock(NoticeService.class);
-        TenantRegistry registry = mock(TenantRegistry.class);
-        when(registry.isRoutingEnabled()).thenReturn(false);
-        when(service.applyScheduledTransitions()).thenReturn(new NoticeService.TransitionResult(0, 0));
+        MultiTenantConfiguration tenants = mock(MultiTenantConfiguration.class);
+        when(tenants.getTenantIds()).thenReturn(java.util.Set.of());
 
-        new NoticeLifecycleScheduler(service, registry).applyTransitions();
-        verify(service, times(1)).applyScheduledTransitions();
+        new NoticeLifecycleScheduler(service, tenants).applyTransitions();
+        verify(service, times(0)).applyScheduledTransitions();
+    }
+
+    @Test
+    void scheduledDailyAtOneAmIst() throws Exception {
+        Method method = NoticeLifecycleScheduler.class.getMethod("applyTransitions");
+        Scheduled scheduled = method.getAnnotation(Scheduled.class);
+        assertThat(scheduled.cron()).isEqualTo("${notices.scheduler.cron:0 0 1 * * *}");
+        assertThat(scheduled.zone()).isEqualTo("${notices.scheduler.zone:Asia/Kolkata}");
     }
 }
